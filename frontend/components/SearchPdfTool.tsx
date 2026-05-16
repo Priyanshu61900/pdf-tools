@@ -4,21 +4,23 @@ import { useState } from "react"
 import { API_URL } from "@/lib/api"
 
 export default function SearchPdfTool() {
+
   const [file, setFile] = useState<File | null>(null)
   const [text, setText] = useState("")
-  const [downloadUrl, setDownloadUrl] = useState("")
+  const [txtUrl, setTxtUrl] = useState("")
+  const [pdfUrl, setPdfUrl] = useState("")
   const [loading, setLoading] = useState(false)
 
   const handle = async () => {
+
     if (!file || !text) return
 
     setLoading(true)
 
     const form = new FormData()
+
     form.append("file", file)
     form.append("search_text", text)
-    form.append("page_mode", "all")
-    form.append("download_mode", "highlighted")
 
     const res = await fetch(`${API_URL}/api/search-highlight`, {
       method: "POST",
@@ -26,7 +28,9 @@ export default function SearchPdfTool() {
     })
 
     const data = await res.json()
-    setDownloadUrl(data.download_url)
+
+    setTxtUrl(data.txt_download_url)
+    setPdfUrl(data.pdf_download_url)
 
     setLoading(false)
   }
@@ -54,15 +58,28 @@ export default function SearchPdfTool() {
         {loading ? "Processing..." : "Search"}
       </button>
 
-      {downloadUrl && (
-        <a
-          href={downloadUrl}
-          className="block mt-4 text-green-400 text-center"
-          target="_blank"
-        >
-          Download Result
-        </a>
+      {(txtUrl || pdfUrl) && (
+        <div className="mt-6 flex flex-col gap-4">
+
+          <a
+            href={txtUrl}
+            target="_blank"
+            className="bg-green-500 text-black p-4 rounded-2xl text-center font-bold"
+          >
+            Download TXT
+          </a>
+
+          <a
+            href={pdfUrl}
+            target="_blank"
+            className="bg-blue-500 text-white p-4 rounded-2xl text-center font-bold"
+          >
+            Download PDF
+          </a>
+
+        </div>
       )}
+
     </div>
   )
 }

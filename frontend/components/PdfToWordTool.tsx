@@ -4,20 +4,24 @@ import { useState } from "react"
 import { API_URL } from "@/lib/api"
 
 export default function PdfToWordTool() {
+
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
-  const [downloadUrl, setDownloadUrl] = useState("")
+  const [docxUrl, setDocxUrl] = useState("")
   const [error, setError] = useState("")
 
   const handle = async () => {
+
     if (!file) return setError("Upload a PDF first")
 
     setLoading(true)
     setError("")
-    setDownloadUrl("")
+    setDocxUrl("")
 
     try {
+
       const form = new FormData()
+
       form.append("file", file)
 
       const res = await fetch(`${API_URL}/api/pdf-to-word`, {
@@ -26,10 +30,15 @@ export default function PdfToWordTool() {
       })
 
       const data = await res.json()
-      setDownloadUrl(data.download_url)
+
+      setDocxUrl(data.download_url)
+
     } catch {
+
       setError("Conversion failed")
+
     } finally {
+
       setLoading(false)
     }
   }
@@ -50,17 +59,22 @@ export default function PdfToWordTool() {
         {loading ? "Processing..." : "Convert"}
       </button>
 
-      {error && <p className="text-red-500 mt-4">{error}</p>}
+      {error && (
+        <p className="text-red-500 mt-4">
+          {error}
+        </p>
+      )}
 
-      {downloadUrl && (
+      {docxUrl && (
         <a
           className="block mt-6 text-center bg-green-500 text-black p-4 rounded-2xl font-bold"
-          href={downloadUrl}
+          href={docxUrl}
           target="_blank"
         >
-          Download File
+          Download DOCX
         </a>
       )}
+
     </div>
   )
 }

@@ -4,23 +4,23 @@ import { useState } from "react"
 import { API_URL } from "@/lib/api"
 
 export default function HighlightPdfTool() {
+
   const [file, setFile] = useState<File | null>(null)
   const [searchText, setSearchText] = useState("")
-  const [downloadUrl, setDownloadUrl] = useState("")
+  const [txtUrl, setTxtUrl] = useState("")
+  const [pdfUrl, setPdfUrl] = useState("")
   const [loading, setLoading] = useState(false)
-  const [dragActive, setDragActive] = useState(false)
 
   const handleSubmit = async () => {
+
     if (!file) return
 
     setLoading(true)
 
     const formData = new FormData()
+
     formData.append("file", file)
     formData.append("search_text", searchText)
-    formData.append("page_mode", "all")
-    formData.append("pages", "")
-    formData.append("download_mode", "highlighted")
 
     const res = await fetch(`${API_URL}/api/search-highlight`, {
       method: "POST",
@@ -28,7 +28,9 @@ export default function HighlightPdfTool() {
     })
 
     const data = await res.json()
-    setDownloadUrl(data.download_url)
+
+    setTxtUrl(data.txt_download_url)
+    setPdfUrl(data.pdf_download_url)
 
     setLoading(false)
   }
@@ -36,34 +38,11 @@ export default function HighlightPdfTool() {
   return (
     <div className="w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-3xl p-8">
 
-      <div
-        onDragOver={(e) => {
-          e.preventDefault()
-          setDragActive(true)
-        }}
-        onDragLeave={() => setDragActive(false)}
-        onDrop={(e) => {
-          e.preventDefault()
-          setDragActive(false)
-          const file = e.dataTransfer.files?.[0]
-          if (file) setFile(file)
-        }}
-        className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer ${
-          dragActive ? "border-white bg-zinc-900" : "border-zinc-600 bg-zinc-900"
-        }`}
-      >
-        <input
-          type="file"
-          accept=".pdf"
-          className="hidden"
-          id="fileUpload"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
-        />
-
-        <label htmlFor="fileUpload" className="cursor-pointer block">
-          {file ? file.name : "Drag & Drop PDF or Click to Upload"}
-        </label>
-      </div>
+      <input
+        type="file"
+        accept=".pdf"
+        onChange={(e) => setFile(e.target.files?.[0] || null)}
+      />
 
       <input
         className="w-full mt-4 p-3 rounded-xl bg-zinc-800 text-white"
@@ -80,15 +59,28 @@ export default function HighlightPdfTool() {
         {loading ? "Processing..." : "Process PDF"}
       </button>
 
-      {downloadUrl && (
-        <a
-          className="block mt-6 text-green-400 text-center underline"
-          href={downloadUrl}
-          target="_blank"
-        >
-          Download Highlighted PDF
-        </a>
+      {(txtUrl || pdfUrl) && (
+        <div className="mt-6 flex flex-col gap-4">
+
+          <a
+            href={txtUrl}
+            target="_blank"
+            className="bg-green-500 text-black p-4 rounded-2xl text-center font-bold"
+          >
+            Download TXT
+          </a>
+
+          <a
+            href={pdfUrl}
+            target="_blank"
+            className="bg-blue-500 text-white p-4 rounded-2xl text-center font-bold"
+          >
+            Download PDF
+          </a>
+
+        </div>
       )}
+
     </div>
   )
 }
