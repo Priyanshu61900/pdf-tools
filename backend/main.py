@@ -1,6 +1,6 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 import os
 import uuid
@@ -11,7 +11,21 @@ import re
 
 app = FastAPI()
 
+# =========================
+# CONFIG
+# =========================
+
 BASE_URL = "https://pdf-tools-backend-rvzt.onrender.com"
+
+OUTPUT_DIR = "outputs"
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+MAX_FILE_SIZE = 20 * 1024 * 1024  # 20MB
+
+
+# =========================
+# CORS
+# =========================
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,48 +35,109 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-OUTPUT_DIR = "outputs"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# =========================
+# FILE SIZE LIMIT
+# =========================
+
+@app.middleware("http")
+async def limit_upload_size(request: Request, call_next):
+
+    content_length = request.headers.get("content-length")
+
+    if content_length and int(content_length) > MAX_FILE_SIZE:
+        return JSONResponse(
+            status_code=413,
+            content={
+                "success": False,
+                "error": "File too large. Max 20MB allowed."
+            }
+        )
+
+    return await call_next(request)
 
 
 # =========================
-# NORMALIZER (FUZZY CORE)
+# NORMALIZER
 # =========================
+
 def normalize(text: str):
     return re.sub(r"\s+", "", text.lower())
 
 
-def fuzzy_match(page_text, search_text):
-    """
-    returns True if:
-    - all words exist (partial match)
-    - ignores spaces + case
-    """
+def fuzzy_match(page_text: str, search_text: str):
+
     page_norm = normalize(page_text)
+
     terms = search_text.lower().split()
 
-    return all(t in page_norm for t in terms)
+    return all(term in page_norm for term in terms)
+
+
+# =========================
+# HEALTH CHECK
+# =========================
+
+@app.get("/")
+def home():
+    return {
+        "status": "running"
+    }
 
 
 # =========================
 # SEARCH + HIGHLIGHT
 # =========================
+
 @app.post("/api/search-highlight")
 async def search_highlight(
     file: UploadFile = File(...),
-    search_text: str = "",
-    highlight_color: str = "yellow",
+    search_text: str = Form(...),
+    highlight_color: str = Form("yellow"),
 ):
 
     temp_dir = tempfile.mkdtemp()
 
-    try:
-        input_path = os.path.join(temp_dir, file.filename)
+    pdf = None
 
-        with open(input_path, "wb") as f:
-            shutil.copyfileobj(file.file, f)
+    try:
+
+        # =========================
+        # VALIDATION
+        # =========================
+
+        if not file.filename:
+            return {
+                "success": False,
+                "error": "No file uploaded"
+            }
+
+        if not file.filename.lower().endswith(".pdf"):
+            return {
+                "success": False,
+                "error": "Only PDF files are allowed"
+            }
+
+        # =========================
+        # SAVE TEMP FILE
+        # =========================
+
+        safe_filename = file.filename.replace("/", "_").replace("\\", "_")
+
+        input_path = os.path.join(temp_dir, safe_filename)
+
+        with open(input_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # =========================
+        # OPEN PDF
+        # =========================
 
         pdf = fitz.open(input_path)
+
+        # =========================
+        # COLORS
+        # =========================
 
         color_map = {
             "yellow": (1, 1, 0),
@@ -73,70 +148,183 @@ async def search_highlight(
             "orange": (1, 0.5, 0),
         }
 
-        color = color_map.get(highlight_color.lower(), (1, 1, 0))
+        color = color_map.get(
+            highlight_color.lower(),
+            (1, 1, 0)
+        )
 
         search_terms = search_text.lower().split()
 
-        for page in pdf:
+        total_matches = 0
 
-            page_text = page.get_text("text")
+        # =========================
+        # PROCESS PAGES
+        # =========================
 
-            if not page_text.strip():
-                continue
+        for page_number in range(len(pdf)):
 
-            # 🔥 FUZZY FILTER (case + spacing + partial multi-word)
-            if search_text.strip() and not fuzzy_match(page_text, search_text):
-                continue
+            page = pdf[page_number]
 
-            words = []
+            try:
 
-            # 1. full phrase search
-            if search_text.strip():
-                words = page.search_for(search_text)
+                page_text = page.get_text()
 
-            # 2. fallback word-level search
-            if not words:
-                for t in search_terms:
-                    words.extend(page.search_for(t))
+                if not page_text.strip():
+                    continue
 
-            # 3. highlight
-            for inst in words:
-                annot = page.add_highlight_annot(inst)
-                annot.set_colors(stroke=color)
-                annot.set_opacity(0.5)
-                annot.update()
+                # fuzzy filter
+                if search_text.strip():
+
+                    if not fuzzy_match(page_text, search_text):
+                        continue
+
+                matches = []
+
+                # =========================
+                # FULL PHRASE SEARCH
+                # =========================
+
+                if search_text.strip():
+                    matches = page.search_for(search_text)
+
+                # =========================
+                # FALLBACK WORD SEARCH
+                # =========================
+
+                if not matches:
+
+                    for term in search_terms:
+
+                        try:
+                            word_matches = page.search_for(term)
+
+                            if word_matches:
+                                matches.extend(word_matches)
+
+                        except Exception as e:
+                            print(f"Word search error: {e}")
+
+                # =========================
+                # HIGHLIGHT
+                # =========================
+
+                for rect in matches:
+
+                    try:
+
+                        annot = page.add_highlight_annot(rect)
+
+                        annot.set_colors(stroke=color)
+
+                        annot.set_opacity(0.5)
+
+                        annot.update()
+
+                        total_matches += 1
+
+                    except Exception as e:
+                        print(f"Highlight error: {e}")
+
+            except Exception as e:
+                print(f"Page processing error on page {page_number}: {e}")
+
+        # =========================
+        # SAVE OUTPUT
+        # =========================
 
         file_id = str(uuid.uuid4())
-        output_path = os.path.join(OUTPUT_DIR, f"{file_id}.pdf")
 
-        pdf.save(output_path, garbage=4, deflate=True, clean=True)
+        output_path = os.path.join(
+            OUTPUT_DIR,
+            f"{file_id}.pdf"
+        )
+
+        # safer save for Render
+        pdf.save(output_path)
+
         pdf.close()
+
+        pdf = None
+
+        # =========================
+        # RESPONSE
+        # =========================
 
         return {
             "success": True,
+            "matches_found": total_matches,
             "download_url": f"{BASE_URL}/download/{file_id}"
         }
 
     except Exception as e:
-        return {"success": False, "error": str(e)}
+
+        print("MAIN ERROR:", str(e))
+
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
     finally:
-        shutil.rmtree(temp_dir, ignore_errors=True)
+
+        try:
+            if pdf:
+                pdf.close()
+        except:
+            pass
+
+        try:
+            shutil.rmtree(temp_dir, ignore_errors=True)
+        except:
+            pass
 
 
 # =========================
-# DOWNLOAD (100% RELIABLE)
+# DOWNLOAD PDF
 # =========================
+
 @app.get("/download/{file_id}")
 def download(file_id: str):
 
-    path = os.path.join(OUTPUT_DIR, f"{file_id}.pdf")
+    try:
 
-    if not os.path.exists(path):
-        return {"error": "file not ready"}
+        path = os.path.join(
+            OUTPUT_DIR,
+            f"{file_id}.pdf"
+        )
 
-    return FileResponse(
-        path,
-        media_type="application/pdf",
-        filename="highlighted.pdf"
-    )
+        if not os.path.exists(path):
+
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "success": False,
+                    "error": "File not found"
+                }
+            )
+
+        return FileResponse(
+            path=path,
+            media_type="application/pdf",
+            filename="highlighted.pdf"
+        )
+
+    except Exception as e:
+
+        print("DOWNLOAD ERROR:", str(e))
+
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": str(e)
+            }
+        )
+
+
+# =========================
+# START SERVER
+# =========================
+
+# Run locally:
+# uvicorn main:app --reload --host 0.0.0.0 --port 8000
