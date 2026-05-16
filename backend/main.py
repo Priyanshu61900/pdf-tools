@@ -23,6 +23,7 @@ app.add_middleware(
 )
 
 OUTPUT_DIR = "outputs"
+
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
@@ -74,7 +75,7 @@ async def search_highlight(
         matched_pages = []
 
         # =====================================================
-        # HIGHLIGHT TEXT
+        # SEARCH + HIGHLIGHT
         # =====================================================
         for page_num in range(len(pdf)):
 
@@ -83,7 +84,11 @@ async def search_highlight(
             matches = []
 
             if search_text.strip():
-                matches = page.search_for(search_text)
+
+                matches = page.search_for(
+                    search_text,
+                    quads=False
+                )
 
             if matches:
                 matched_pages.append(page_num)
@@ -93,9 +98,11 @@ async def search_highlight(
                 highlight = page.add_highlight_annot(inst)
 
                 # IMPORTANT FIX
-                highlight.set_colors(
-                    stroke=selected_color
-                )
+                highlight.set_colors({
+                    "stroke": selected_color
+                })
+
+                highlight.set_opacity(0.5)
 
                 highlight.update()
 
@@ -109,9 +116,8 @@ async def search_highlight(
 
         pdf.save(
             full_pdf_path,
-            garbage=4,
-            deflate=True,
-            clean=True
+            incremental=False,
+            encryption=0
         )
 
         # =====================================================
@@ -140,9 +146,8 @@ async def search_highlight(
 
         matched_pdf.save(
             matched_pdf_path,
-            garbage=4,
-            deflate=True,
-            clean=True
+            incremental=False,
+            encryption=0
         )
 
         matched_pdf.close()
@@ -313,4 +318,4 @@ def download_docx(file_id: str):
         path,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         filename="converted.docx"
-    )SSS
+    )
