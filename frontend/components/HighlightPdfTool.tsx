@@ -33,14 +33,6 @@ export default function HighlightPdfTool() {
     setLoading(false)
   }
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    setDragActive(false)
-
-    const droppedFile = e.dataTransfer.files?.[0]
-    if (droppedFile) setFile(droppedFile)
-  }
-
   return (
     <div className="w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-3xl p-8">
 
@@ -50,8 +42,13 @@ export default function HighlightPdfTool() {
           setDragActive(true)
         }}
         onDragLeave={() => setDragActive(false)}
-        onDrop={handleDrop}
-        className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition ${
+        onDrop={(e) => {
+          e.preventDefault()
+          setDragActive(false)
+          const file = e.dataTransfer.files?.[0]
+          if (file) setFile(file)
+        }}
+        className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer ${
           dragActive ? "border-white bg-zinc-900" : "border-zinc-600 bg-zinc-900"
         }`}
       >
@@ -64,9 +61,7 @@ export default function HighlightPdfTool() {
         />
 
         <label htmlFor="fileUpload" className="cursor-pointer block">
-          <p className="text-lg font-semibold">
-            {file ? file.name : "Drag & Drop PDF or Click to Upload"}
-          </p>
+          {file ? file.name : "Drag & Drop PDF or Click to Upload"}
         </label>
       </div>
 
@@ -88,7 +83,7 @@ export default function HighlightPdfTool() {
       {downloadUrl && (
         <a
           className="block mt-6 text-green-400 text-center underline"
-          href={`${API_URL}${downloadUrl}`}
+          href={downloadUrl}
           target="_blank"
         >
           Download Highlighted PDF

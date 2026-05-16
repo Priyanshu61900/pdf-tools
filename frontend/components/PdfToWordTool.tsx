@@ -55,7 +55,8 @@ export default function PdfToWordTool() {
       {downloadUrl && (
         <a
           className="block mt-6 text-center bg-green-500 text-black p-4 rounded-2xl font-bold"
-          href={`${API_URL}${downloadUrl}`}
+          href={downloadUrl}
+          target="_blank"
         >
           Download File
         </a>

@@ -59,7 +59,7 @@ export default function ExtractPagesTool() {
       {downloadUrl && (
         <a
           className="block mt-6 text-green-400 text-center underline"
-          href={`${API_URL}${downloadUrl}`}
+          href={downloadUrl}
           target="_blank"
         >
           Download Result
