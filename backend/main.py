@@ -7,7 +7,7 @@ import uuid
 import tempfile
 import shutil
 
-import fitz
+import fitz  # PyMuPDF
 from docx import Document
 
 # ---------------- APP ---------------- #
@@ -16,7 +16,7 @@ app = FastAPI()
 # ---------------- CORS ---------------- #
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],  # allow frontend (Vercel)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,6 +25,50 @@ app.add_middleware(
 # ---------------- STORAGE ---------------- #
 OUTPUT_DIR = "outputs"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+
+# ---------------- SEARCH + HIGHLIGHT API ---------------- #
+@app.post("/api/search-highlight")
+async def search_highlight(
+    file: UploadFile = File(...),
+    search_text: str = ""
+):
+    temp_dir = tempfile.mkdtemp()
+
+    try:
+        input_path = os.path.join(temp_dir, file.filename)
+
+        with open(input_path, "wb") as f:
+            shutil.copyfileobj(file.file, f)
+
+        pdf = fitz.open(input_path)
+
+        result_text = ""
+        pages_with_match = []
+
+        for page_num, page in enumerate(pdf):
+            text = page.get_text("text")
+
+            if search_text.lower() in text.lower():
+                pages_with_match.append(page_num + 1)
+
+            result_text += text
+
+        pdf.close()
+
+        output_id = str(uuid.uuid4())
+        output_path = os.path.join(OUTPUT_DIR, f"result-{output_id}.txt")
+
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(result_text)
+
+        return {
+            "success": True,
+            "download_url": f"/download-text/{output_id}"
+        }
+
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 # ---------------- PDF → WORD ---------------- #
@@ -81,11 +125,28 @@ def download_docx(file_id: str, background_tasks: BackgroundTasks):
     if not os.path.exists(path):
         return {"error": "File not found"}
 
-    # delete after download (SEO-friendly, no storage cost)
     background_tasks.add_task(lambda: os.remove(path))
 
     return FileResponse(
         path,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         filename="converted.docx"
+    )
+
+
+# ---------------- DOWNLOAD TEXT ---------------- #
+@app.get("/download-text/{file_id}")
+def download_text(file_id: str, background_tasks: BackgroundTasks):
+
+    path = os.path.join(OUTPUT_DIR, f"result-{file_id}.txt")
+
+    if not os.path.exists(path):
+        return {"error": "File not found"}
+
+    background_tasks.add_task(lambda: os.remove(path))
+
+    return FileResponse(
+        path,
+        media_type="text/plain",
+        filename="result.txt"
     )
