@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+
 import { API_URL } from "@/lib/api"
 
 export default function HighlightPdfTool() {
@@ -16,29 +17,67 @@ export default function HighlightPdfTool() {
 
   const [loading, setLoading] = useState(false)
 
+  const [error, setError] = useState("")
+
   const handleSubmit = async () => {
 
-    if (!file || !searchText) return
+    if (!file) {
+      setError("Please upload a PDF")
+      return
+    }
 
-    setLoading(true)
+    if (!searchText.trim()) {
+      setError("Please enter text")
+      return
+    }
 
-    const formData = new FormData()
+    try {
 
-    formData.append("file", file)
-    formData.append("search_text", searchText)
-    formData.append("highlight_color", color)
+      setLoading(true)
 
-    const res = await fetch(`${API_URL}/api/search-highlight`, {
-      method: "POST",
-      body: formData,
-    })
+      setError("")
 
-    const data = await res.json()
+      const formData = new FormData()
 
-    setFullPdfUrl(data.full_pdf_url)
-    setMatchedPdfUrl(data.matched_pdf_url)
+      formData.append("file", file)
 
-    setLoading(false)
+      formData.append("search_text", searchText)
+
+      formData.append("highlight_color", color)
+
+      const res = await fetch(
+        `${API_URL}/api/search-highlight`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      )
+
+      const data = await res.json()
+
+      console.log(data)
+
+      if (!data.success) {
+
+        setError(data.error || "Backend error")
+
+        return
+      }
+
+      setFullPdfUrl(data.full_pdf_url)
+
+      setMatchedPdfUrl(data.matched_pdf_url)
+
+    } catch (err) {
+
+      console.error(err)
+
+      setError("Something went wrong")
+
+    } finally {
+
+      setLoading(false)
+    }
   }
 
   return (
@@ -47,19 +86,27 @@ export default function HighlightPdfTool() {
       <input
         type="file"
         accept=".pdf"
-        onChange={(e) => setFile(e.target.files?.[0] || null)}
+        onChange={(e) =>
+          setFile(
+            e.target.files?.[0] || null
+          )
+        }
       />
 
       <input
         className="w-full mt-4 p-3 rounded-xl bg-zinc-800 text-white"
         placeholder="Enter text to highlight"
         value={searchText}
-        onChange={(e) => setSearchText(e.target.value)}
+        onChange={(e) =>
+          setSearchText(e.target.value)
+        }
       />
 
       <select
         value={color}
-        onChange={(e) => setColor(e.target.value)}
+        onChange={(e) =>
+          setColor(e.target.value)
+        }
         className="w-full mt-4 p-3 rounded-xl bg-zinc-800 text-white"
       >
         <option value="yellow">Yellow</option>
@@ -75,8 +122,16 @@ export default function HighlightPdfTool() {
         disabled={loading}
         className="w-full bg-white text-black px-6 py-3 mt-4 rounded-xl font-bold"
       >
-        {loading ? "Processing..." : "Highlight PDF"}
+        {loading
+          ? "Processing..."
+          : "Highlight PDF"}
       </button>
+
+      {error && (
+        <p className="text-red-500 mt-4 text-center">
+          {error}
+        </p>
+      )}
 
       {(fullPdfUrl || matchedPdfUrl) && (
         <div className="mt-6 flex flex-col gap-4">

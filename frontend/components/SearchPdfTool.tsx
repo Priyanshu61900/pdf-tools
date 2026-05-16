@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+
 import { API_URL } from "@/lib/api"
 
 export default function SearchPdfTool() {
@@ -13,31 +14,75 @@ export default function SearchPdfTool() {
 
   const [loading, setLoading] = useState(false)
 
+  const [error, setError] = useState("")
+
   const handle = async () => {
 
-    if (!file || !text) return
+    if (!file) {
+      setError("Please upload a PDF")
+      return
+    }
 
-    setLoading(true)
+    if (!text.trim()) {
+      setError("Please enter text")
+      return
+    }
 
-    const form = new FormData()
+    try {
 
-    form.append("file", file)
+      setLoading(true)
 
-    form.append("search_text", text)
+      setError("")
 
-    // ALWAYS FIXED YELLOW
-    form.append("highlight_color", "yellow")
+      setFullPdfUrl("")
 
-    const res = await fetch(`${API_URL}/api/search-highlight`, {
-      method: "POST",
-      body: form,
-    })
+      const form = new FormData()
 
-    const data = await res.json()
+      form.append("file", file)
 
-    setFullPdfUrl(data.full_pdf_url)
+      form.append("search_text", text)
 
-    setLoading(false)
+      # ALWAYS YELLOW
+      form.append("highlight_color", "yellow")
+
+      const res = await fetch(
+        `${API_URL}/api/search-highlight`,
+        {
+          method: "POST",
+          body: form,
+        }
+      )
+
+      const data = await res.json()
+
+      console.log(data)
+
+      if (!data.success) {
+
+        setError(data.error || "Backend error")
+
+        return
+      }
+
+      if (!data.full_pdf_url) {
+
+        setError("No PDF generated")
+
+        return
+      }
+
+      setFullPdfUrl(data.full_pdf_url)
+
+    } catch (err) {
+
+      console.error(err)
+
+      setError("Something went wrong")
+
+    } finally {
+
+      setLoading(false)
+    }
   }
 
   return (
@@ -46,27 +91,42 @@ export default function SearchPdfTool() {
       <input
         type="file"
         accept=".pdf"
-        onChange={(e) => setFile(e.target.files?.[0] || null)}
+        onChange={(e) =>
+          setFile(
+            e.target.files?.[0] || null
+          )
+        }
       />
 
       <input
         className="w-full mt-4 p-3 rounded-xl bg-zinc-800 text-white"
         placeholder="Search text, number or keyword"
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) =>
+          setText(e.target.value)
+        }
       />
 
       <button
         onClick={handle}
+        disabled={loading}
         className="w-full bg-white text-black mt-4 p-4 rounded-2xl font-bold"
       >
-        {loading ? "Processing..." : "Search PDF"}
+        {loading
+          ? "Processing..."
+          : "Search PDF"}
       </button>
 
       <p className="text-zinc-400 text-sm mt-4 text-center">
-        Want only highlighted pages or custom colors?
+        Want custom colors or only highlighted pages?
         Use the Highlight PDF Tool.
       </p>
+
+      {error && (
+        <p className="text-red-500 mt-4 text-center">
+          {error}
+        </p>
+      )}
 
       {fullPdfUrl && (
         <div className="mt-6">
