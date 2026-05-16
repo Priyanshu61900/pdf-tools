@@ -1,23 +1,16 @@
 "use client"
 
 import { useState } from "react"
-
 import { API_URL } from "@/lib/api"
 
 export default function SearchPdfTool() {
-
   const [file, setFile] = useState<File | null>(null)
-
   const [text, setText] = useState("")
-
   const [fullPdfUrl, setFullPdfUrl] = useState("")
-
   const [loading, setLoading] = useState(false)
-
   const [error, setError] = useState("")
 
   const handle = async () => {
-
     if (!file) {
       setError("Please upload a PDF")
       return
@@ -29,58 +22,36 @@ export default function SearchPdfTool() {
     }
 
     try {
-
       setLoading(true)
-
       setError("")
-
       setFullPdfUrl("")
 
       const form = new FormData()
 
       form.append("file", file)
-
       form.append("search_text", text)
-
-      # ALWAYS YELLOW
       form.append("highlight_color", "yellow")
 
-      const res = await fetch(
-        `${API_URL}/api/search-highlight`,
-        {
-          method: "POST",
-          body: form,
-        }
-      )
+      const res = await fetch(`${API_URL}/api/search-highlight`, {
+        method: "POST",
+        body: form,
+      })
 
       const data = await res.json()
 
       console.log(data)
 
       if (!data.success) {
-
         setError(data.error || "Backend error")
-
-        return
-      }
-
-      if (!data.full_pdf_url) {
-
-        setError("No PDF generated")
-
         return
       }
 
       setFullPdfUrl(data.full_pdf_url)
 
     } catch (err) {
-
       console.error(err)
-
       setError("Something went wrong")
-
     } finally {
-
       setLoading(false)
     }
   }
@@ -91,20 +62,14 @@ export default function SearchPdfTool() {
       <input
         type="file"
         accept=".pdf"
-        onChange={(e) =>
-          setFile(
-            e.target.files?.[0] || null
-          )
-        }
+        onChange={(e) => setFile(e.target.files?.[0] || null)}
       />
 
       <input
         className="w-full mt-4 p-3 rounded-xl bg-zinc-800 text-white"
         placeholder="Search text, number or keyword"
         value={text}
-        onChange={(e) =>
-          setText(e.target.value)
-        }
+        onChange={(e) => setText(e.target.value)}
       />
 
       <button
@@ -112,9 +77,7 @@ export default function SearchPdfTool() {
         disabled={loading}
         className="w-full bg-white text-black mt-4 p-4 rounded-2xl font-bold"
       >
-        {loading
-          ? "Processing..."
-          : "Search PDF"}
+        {loading ? "Processing..." : "Search PDF"}
       </button>
 
       <p className="text-zinc-400 text-sm mt-4 text-center">
@@ -130,7 +93,6 @@ export default function SearchPdfTool() {
 
       {fullPdfUrl && (
         <div className="mt-6">
-
           <a
             href={fullPdfUrl}
             target="_blank"
@@ -138,7 +100,6 @@ export default function SearchPdfTool() {
           >
             Download Full Highlighted PDF
           </a>
-
         </div>
       )}
 
