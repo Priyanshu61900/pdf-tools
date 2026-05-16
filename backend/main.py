@@ -1,3 +1,63 @@
+import os
+import uuid
+import shutil
+import tempfile
+
+import fitz
+from fastapi import FastAPI, UploadFile, File, Form
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+
+# =====================================================
+# APP
+# =====================================================
+
+app = FastAPI()
+
+# =====================================================
+# CORS
+# =====================================================
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# =====================================================
+# OUTPUT FOLDER
+# =====================================================
+
+OUTPUT_DIR = "outputs"
+
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# =====================================================
+# BASE URL
+# =====================================================
+
+BASE_URL = os.getenv(
+    "BASE_URL",
+    "http://localhost:10000"
+)
+
+# =====================================================
+# HOME
+# =====================================================
+
+@app.get("/")
+async def home():
+    return {
+        "success": True,
+        "message": "PDF Highlight API Running"
+    }
+
+# =====================================================
+# SEARCH + HIGHLIGHT PDF
+# =====================================================
+
 @app.post("/api/search-highlight")
 async def search_highlight(
     file: UploadFile = File(...),
@@ -9,9 +69,10 @@ async def search_highlight(
 
     try:
 
-        # -----------------------------
+        # -------------------------------------------------
         # SAVE INPUT PDF
-        # -----------------------------
+        # -------------------------------------------------
+
         input_path = os.path.join(
             temp_dir,
             "input.pdf"
@@ -20,14 +81,16 @@ async def search_highlight(
         with open(input_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
 
-        # -----------------------------
+        # -------------------------------------------------
         # OPEN PDF
-        # -----------------------------
+        # -------------------------------------------------
+
         pdf = fitz.open(input_path)
 
-        # -----------------------------
+        # -------------------------------------------------
         # COLORS
-        # -----------------------------
+        # -------------------------------------------------
+
         color_map = {
             "yellow": (1, 1, 0),
             "red": (1, 0, 0),
@@ -46,9 +109,10 @@ async def search_highlight(
 
         matched_pages = []
 
-        # =================================================
+        # -------------------------------------------------
         # PROCESS PDF
-        # =================================================
+        # -------------------------------------------------
+
         for page_num in range(len(pdf)):
 
             page = pdf[page_num]
@@ -76,9 +140,10 @@ async def search_highlight(
             if found_on_page:
                 matched_pages.append(page_num)
 
-        # =================================================
+        # -------------------------------------------------
         # SAVE FULL PDF
-        # =================================================
+        # -------------------------------------------------
+
         full_pdf_path = os.path.join(
             OUTPUT_DIR,
             f"full-{output_id}.pdf"
@@ -88,14 +153,16 @@ async def search_highlight(
 
         pdf.close()
 
-        # =================================================
+        # -------------------------------------------------
         # REOPEN SAVED PDF
-        # =================================================
+        # -------------------------------------------------
+
         saved_pdf = fitz.open(full_pdf_path)
 
-        # =================================================
+        # -------------------------------------------------
         # CREATE MATCHED PDF
-        # =================================================
+        # -------------------------------------------------
+
         matched_pdf = fitz.open()
 
         for page_num in matched_pages:
@@ -117,9 +184,10 @@ async def search_highlight(
 
         saved_pdf.close()
 
-        # =================================================
+        # -------------------------------------------------
         # RESPONSE
-        # =================================================
+        # -------------------------------------------------
+
         return {
             "success": True,
             "full_pdf_url": f"{BASE_URL}/download-full-pdf/{output_id}",
@@ -136,3 +204,51 @@ async def search_highlight(
     finally:
 
         shutil.rmtree(temp_dir, ignore_errors=True)
+
+# =====================================================
+# DOWNLOAD FULL PDF
+# =====================================================
+
+@app.get("/download-full-pdf/{file_id}")
+async def download_full_pdf(file_id: str):
+
+    file_path = os.path.join(
+        OUTPUT_DIR,
+        f"full-{file_id}.pdf"
+    )
+
+    if not os.path.exists(file_path):
+        return {
+            "success": False,
+            "error": "File not found"
+        }
+
+    return FileResponse(
+        file_path,
+        media_type="application/pdf",
+        filename="highlighted.pdf"
+    )
+
+# =====================================================
+# DOWNLOAD MATCHED PDF
+# =====================================================
+
+@app.get("/download-matched-pdf/{file_id}")
+async def download_matched_pdf(file_id: str):
+
+    file_path = os.path.join(
+        OUTPUT_DIR,
+        f"matched-{file_id}.pdf"
+    )
+
+    if not os.path.exists(file_path):
+        return {
+            "success": False,
+            "error": "File not found"
+        }
+
+    return FileResponse(
+        file_path,
+        media_type="application/pdf",
+        filename="matched-pages.pdf"
+    )
