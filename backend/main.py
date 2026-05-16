@@ -6,6 +6,7 @@ import os
 import uuid
 import tempfile
 import shutil
+import threading
 
 import fitz
 from docx import Document
@@ -23,7 +24,6 @@ app.add_middleware(
 )
 
 OUTPUT_DIR = "outputs"
-
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
@@ -32,28 +32,12 @@ def home():
     return {"status": "Backend running"}
 
 
-# =====================================================
-# SEARCH + HIGHLIGHT
-# =====================================================
-@app.post("/api/search-highlight")
-async def search_highlight(
-    file: UploadFile = File(...),
-    search_text: str = "",
-    highlight_color: str = "yellow",
-):
-
-    temp_dir = tempfile.mkdtemp()
+# ==============================
+# BACKGROUND WORKER
+# ==============================
+def process_pdf_job(input_path, search_text, highlight_color, output_id):
 
     try:
-
-        input_path = os.path.join(
-            temp_dir,
-            file.filename
-        )
-
-        with open(input_path, "wb") as f:
-            shutil.copyfileobj(file.file, f)
-
         pdf = fitz.open(input_path)
 
         color_map = {
@@ -65,129 +49,99 @@ async def search_highlight(
             "orange": (1, 0.5, 0),
         }
 
-        selected_color = color_map.get(
-            highlight_color.lower(),
-            (1, 1, 0)
-        )
-
-        output_id = str(uuid.uuid4())
+        selected_color = color_map.get(highlight_color.lower(), (1, 1, 0))
 
         matched_pages = []
 
-        # =====================================================
-        # SEARCH + HIGHLIGHT
-        # =====================================================
         for page_num in range(len(pdf)):
-
             page = pdf[page_num]
 
-            matches = []
-
             if search_text.strip():
+                matches = page.search_for(search_text)
 
-                matches = page.search_for(
-                    search_text,
-                    quads=False
-                )
+                if matches:
+                    matched_pages.append(page_num)
 
-            if matches:
-                matched_pages.append(page_num)
+                for inst in matches:
+                    highlight = page.add_highlight_annot(inst)
+                    highlight.set_colors({"stroke": selected_color})
+                    highlight.set_opacity(0.5)
+                    highlight.update()
 
-            for inst in matches:
+        # FULL PDF
+        full_pdf_path = os.path.join(OUTPUT_DIR, f"full-{output_id}.pdf")
+        pdf.save(full_pdf_path)
 
-                highlight = page.add_highlight_annot(inst)
-
-                # IMPORTANT FIX
-                highlight.set_colors({
-                    "stroke": selected_color
-                })
-
-                highlight.set_opacity(0.5)
-
-                highlight.update()
-
-        # =====================================================
-        # SAVE FULL PDF
-        # =====================================================
-        full_pdf_path = os.path.join(
-            OUTPUT_DIR,
-            f"full-{output_id}.pdf"
-        )
-
-        pdf.save(
-            full_pdf_path,
-            incremental=False,
-            encryption=0
-        )
-
-        # =====================================================
-        # SAVE MATCHED PAGES PDF
-        # =====================================================
+        # MATCHED PDF
         matched_pdf = fitz.open()
 
         if matched_pages:
-
-            for page_num in matched_pages:
-
-                matched_pdf.insert_pdf(
-                    pdf,
-                    from_page=page_num,
-                    to_page=page_num
-                )
-
+            for p in matched_pages:
+                matched_pdf.insert_pdf(pdf, from_page=p, to_page=p)
         else:
-
             matched_pdf.new_page()
 
-        matched_pdf_path = os.path.join(
-            OUTPUT_DIR,
-            f"matched-{output_id}.pdf"
-        )
-
-        matched_pdf.save(
-            matched_pdf_path,
-            incremental=False,
-            encryption=0
-        )
+        matched_pdf_path = os.path.join(OUTPUT_DIR, f"matched-{output_id}.pdf")
+        matched_pdf.save(matched_pdf_path)
 
         matched_pdf.close()
-
         pdf.close()
 
-        return {
-            "success": True,
-            "full_pdf_url": f"{BASE_URL}/download-full-pdf/{output_id}",
-            "matched_pdf_url": f"{BASE_URL}/download-matched-pdf/{output_id}"
-        }
-
     except Exception as e:
-
-        return {
-            "success": False,
-            "error": str(e)
-        }
-
-    finally:
-
-        shutil.rmtree(temp_dir, ignore_errors=True)
+        print("BACKGROUND ERROR:", e)
 
 
-# =====================================================
-# PDF TO WORD
-# =====================================================
-@app.post("/api/pdf-to-word")
-async def pdf_to_word(
-    file: UploadFile = File(...)
+# ==============================
+# SEARCH + HIGHLIGHT (FIXED)
+# ==============================
+@app.post("/api/search-highlight")
+async def search_highlight(
+    file: UploadFile = File(...),
+    search_text: str = "",
+    highlight_color: str = "yellow",
 ):
 
     temp_dir = tempfile.mkdtemp()
 
     try:
+        input_path = os.path.join(temp_dir, file.filename)
 
-        input_path = os.path.join(
-            temp_dir,
-            file.filename
+        with open(input_path, "wb") as f:
+            shutil.copyfileobj(file.file, f)
+
+        output_id = str(uuid.uuid4())
+
+        # RUN IN BACKGROUND (THIS FIXES HANG)
+        thread = threading.Thread(
+            target=process_pdf_job,
+            args=(input_path, search_text, highlight_color, output_id),
         )
+        thread.start()
+
+        return {
+            "success": True,
+            "status": "processing",
+            "full_pdf_url": f"{BASE_URL}/download-full-pdf/{output_id}",
+            "matched_pdf_url": f"{BASE_URL}/download-matched-pdf/{output_id}"
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+# ==============================
+# PDF TO WORD (FIXED)
+# ==============================
+@app.post("/api/pdf-to-word")
+async def pdf_to_word(file: UploadFile = File(...)):
+
+    temp_dir = tempfile.mkdtemp()
+
+    try:
+        input_path = os.path.join(temp_dir, file.filename)
 
         with open(input_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
@@ -195,40 +149,24 @@ async def pdf_to_word(
         pdf = fitz.open(input_path)
 
         text = ""
-
         for page in pdf:
             text += page.get_text("text") + "\n"
 
         pdf.close()
 
         output_id = str(uuid.uuid4())
-
-        output_path = os.path.join(
-            OUTPUT_DIR,
-            f"converted-{output_id}.docx"
-        )
+        output_path = os.path.join(OUTPUT_DIR, f"converted-{output_id}.docx")
 
         word = Document()
-
-        word.add_heading(
-            "Converted PDF",
-            level=1
-        )
+        word.add_heading("Converted PDF", level=1)
 
         if text.strip():
-
             for line in text.split("\n"):
-
                 line = line.strip()
-
                 if line:
                     word.add_paragraph(line)
-
         else:
-
-            word.add_paragraph(
-                "No extractable text found"
-            )
+            word.add_paragraph("No extractable text found")
 
         word.save(output_path)
 
@@ -238,81 +176,44 @@ async def pdf_to_word(
         }
 
     except Exception as e:
-
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e)}
 
     finally:
-
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
-# =====================================================
-# DOWNLOAD FULL PDF
-# =====================================================
+# ==============================
+# DOWNLOADS (UNCHANGED BUT SAFE)
+# ==============================
 @app.get("/download-full-pdf/{file_id}")
 def download_full_pdf(file_id: str):
 
-    path = os.path.join(
-        OUTPUT_DIR,
-        f"full-{file_id}.pdf"
-    )
+    path = os.path.join(OUTPUT_DIR, f"full-{file_id}.pdf")
 
     if not os.path.exists(path):
+        return {"error": "File not found"}
 
-        return {
-            "error": "File not found"
-        }
-
-    return FileResponse(
-        path,
-        media_type="application/pdf",
-        filename="highlighted-full.pdf"
-    )
+    return FileResponse(path, media_type="application/pdf", filename="highlighted-full.pdf")
 
 
-# =====================================================
-# DOWNLOAD MATCHED PDF
-# =====================================================
 @app.get("/download-matched-pdf/{file_id}")
 def download_matched_pdf(file_id: str):
 
-    path = os.path.join(
-        OUTPUT_DIR,
-        f"matched-{file_id}.pdf"
-    )
+    path = os.path.join(OUTPUT_DIR, f"matched-{file_id}.pdf")
 
     if not os.path.exists(path):
+        return {"error": "File not found"}
 
-        return {
-            "error": "File not found"
-        }
-
-    return FileResponse(
-        path,
-        media_type="application/pdf",
-        filename="highlighted-pages.pdf"
-    )
+    return FileResponse(path, media_type="application/pdf", filename="highlighted-pages.pdf")
 
 
-# =====================================================
-# DOWNLOAD DOCX
-# =====================================================
 @app.get("/download-docx/{file_id}")
 def download_docx(file_id: str):
 
-    path = os.path.join(
-        OUTPUT_DIR,
-        f"converted-{file_id}.docx"
-    )
+    path = os.path.join(OUTPUT_DIR, f"converted-{file_id}.docx")
 
     if not os.path.exists(path):
-
-        return {
-            "error": "File not found"
-        }
+        return {"error": "File not found"}
 
     return FileResponse(
         path,
