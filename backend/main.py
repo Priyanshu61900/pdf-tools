@@ -123,6 +123,7 @@ async def search_highlight(
             if matches:
                 matched_pages.append(page_num)
 
+            # ---------- HIGHLIGHT ----------
             for inst in matches:
 
                 highlight = page.add_highlight_annot(inst)
@@ -133,13 +134,21 @@ async def search_highlight(
 
                 highlight.update()
 
+            # IMPORTANT: reload page so highlights save properly
+            page = pdf.reload_page(page)
+
         # ---------- FULL PDF ----------
         full_pdf_path = os.path.join(
             OUTPUT_DIR,
             f"full-{output_id}.pdf"
         )
 
-        pdf.save(full_pdf_path)
+        pdf.save(
+            full_pdf_path,
+            garbage=4,
+            deflate=True,
+            incremental=False
+        )
 
         # ---------- MATCHED PAGES PDF ----------
         matched_pdf = fitz.open()
@@ -163,7 +172,12 @@ async def search_highlight(
             f"matched-{output_id}.pdf"
         )
 
-        matched_pdf.save(matched_pdf_path)
+        matched_pdf.save(
+            matched_pdf_path,
+            garbage=4,
+            deflate=True,
+            incremental=False
+        )
 
         matched_pdf.close()
 
