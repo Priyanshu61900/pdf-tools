@@ -82,7 +82,27 @@ async def search_highlight(
             matches = []
 
             if search_text.strip():
-                matches = page.search_for(search_text)
+
+                # exact search
+                matches = page.search_for(
+                    search_text,
+                    quads=False
+                )
+
+                # fallback word-by-word search
+                if not matches:
+
+                    words = search_text.split()
+
+                    for word in words:
+
+                        found = page.search_for(
+                            word,
+                            quads=False
+                        )
+
+                        if found:
+                            matches.extend(found)
 
             if matches:
                 matched_pages.append(page_num)
@@ -92,6 +112,8 @@ async def search_highlight(
                 highlight = page.add_highlight_annot(inst)
 
                 highlight.set_colors(stroke=selected_color)
+
+                highlight.set_opacity(0.4)
 
                 highlight.update()
 
