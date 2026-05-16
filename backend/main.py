@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
@@ -38,24 +38,33 @@ def home():
 @app.post("/api/search-highlight")
 async def search_highlight(
     file: UploadFile = File(...),
-    search_text: str = "",
-    highlight_color: str = "yellow",
+    search_text: str = Form(...),
+    highlight_color: str = Form("yellow"),
 ):
 
     temp_dir = tempfile.mkdtemp()
 
     try:
 
+        # -----------------------------
+        # SAVE INPUT PDF
+        # -----------------------------
         input_path = os.path.join(
             temp_dir,
-            file.filename
+            "input.pdf"
         )
 
         with open(input_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
 
+        # -----------------------------
+        # OPEN PDF
+        # -----------------------------
         pdf = fitz.open(input_path)
 
+        # -----------------------------
+        # COLORS
+        # -----------------------------
         color_map = {
             "yellow": (1, 1, 0),
             "red": (1, 0, 0),
@@ -74,83 +83,69 @@ async def search_highlight(
 
         matched_pages = []
 
-        # ---------- PROCESS ----------
+        # =================================================
+        # PROCESS PDF
+        # =================================================
         for page_num in range(len(pdf)):
 
             page = pdf[page_num]
 
             matches = []
 
-            if search_text.strip():
+            # -----------------------------
+            # GET PAGE TEXT
+            # -----------------------------
+            page_text = page.get_text("text")
 
-                # normal search
-                matches = page.search_for(
-                    search_text,
-                    flags=fitz.TEXT_DEHYPHENATE
-                )
+            if not page_text:
+                continue
 
-                # uppercase fallback
-                if not matches:
+            # -----------------------------
+            # CASE INSENSITIVE CHECK
+            # -----------------------------
+            if search_text.lower() in page_text.lower():
 
-                    matches = page.search_for(
-                        search_text.upper(),
-                        flags=fitz.TEXT_DEHYPHENATE
-                    )
-
-                # capitalized fallback
-                if not matches:
-
-                    matches = page.search_for(
-                        search_text.capitalize(),
-                        flags=fitz.TEXT_DEHYPHENATE
-                    )
-
-                # word-by-word fallback
-                if not matches:
-
-                    words = search_text.split()
-
-                    for word in words:
-
-                        found = page.search_for(
-                            word,
-                            flags=fitz.TEXT_DEHYPHENATE
-                        )
-
-                        if found:
-                            matches.extend(found)
-
-            if matches:
                 matched_pages.append(page_num)
 
-            # ---------- HIGHLIGHT ----------
-            for inst in matches:
+                # -----------------------------
+                # WORD SEARCH
+                # -----------------------------
+                words = page.get_text("words")
 
-                highlight = page.add_highlight_annot(inst)
+                for word in words:
 
-                highlight.set_colors(stroke=selected_color)
+                    x0, y0, x1, y1, text, *_ = word
 
-                highlight.set_opacity(0.4)
+                    if search_text.lower() in text.lower():
 
-                highlight.update()
+                        rect = fitz.Rect(x0, y0, x1, y1)
 
-            # IMPORTANT: reload page so highlights save properly
-            page = pdf.reload_page(page)
+                        matches.append(rect)
 
-        # ---------- FULL PDF ----------
+            # -----------------------------
+            # ADD HIGHLIGHTS
+            # -----------------------------
+            for rect in matches:
+
+                annot = page.add_highlight_annot(rect)
+
+                annot.set_colors(stroke=selected_color)
+
+                annot.update()
+
+        # =================================================
+        # SAVE FULL PDF
+        # =================================================
         full_pdf_path = os.path.join(
             OUTPUT_DIR,
             f"full-{output_id}.pdf"
         )
 
-        pdf.save(
-            full_pdf_path,
-            garbage=4,
-            deflate=True,
-            incremental=False
-        )
+        pdf.save(full_pdf_path)
 
-        # ---------- MATCHED PAGES PDF ----------
+        # =================================================
+        # CREATE MATCHED PDF
+        # =================================================
         matched_pdf = fitz.open()
 
         if matched_pages:
@@ -172,17 +167,15 @@ async def search_highlight(
             f"matched-{output_id}.pdf"
         )
 
-        matched_pdf.save(
-            matched_pdf_path,
-            garbage=4,
-            deflate=True,
-            incremental=False
-        )
+        matched_pdf.save(matched_pdf_path)
 
         matched_pdf.close()
 
         pdf.close()
 
+        # =================================================
+        # RESPONSE
+        # =================================================
         return {
             "success": True,
             "full_pdf_url": f"{BASE_URL}/download-full-pdf/{output_id}",
@@ -215,7 +208,7 @@ async def pdf_to_word(
 
         input_path = os.path.join(
             temp_dir,
-            file.filename
+            "input.pdf"
         )
 
         with open(input_path, "wb") as f:
