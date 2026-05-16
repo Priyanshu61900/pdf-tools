@@ -23,7 +23,6 @@ app.add_middleware(
 )
 
 OUTPUT_DIR = "outputs"
-
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
@@ -74,7 +73,9 @@ async def search_highlight(
 
         matched_pages = []
 
-        # ---------- PROCESS ----------
+        # =====================================================
+        # HIGHLIGHT TEXT
+        # =====================================================
         for page_num in range(len(pdf)):
 
             page = pdf[page_num]
@@ -91,19 +92,31 @@ async def search_highlight(
 
                 highlight = page.add_highlight_annot(inst)
 
-                highlight.set_colors(stroke=selected_color)
+                # IMPORTANT FIX
+                highlight.set_colors(
+                    stroke=selected_color
+                )
 
                 highlight.update()
 
-        # ---------- FULL PDF ----------
+        # =====================================================
+        # SAVE FULL PDF
+        # =====================================================
         full_pdf_path = os.path.join(
             OUTPUT_DIR,
             f"full-{output_id}.pdf"
         )
 
-        pdf.save(full_pdf_path)
+        pdf.save(
+            full_pdf_path,
+            garbage=4,
+            deflate=True,
+            clean=True
+        )
 
-        # ---------- MATCHED PAGES PDF ----------
+        # =====================================================
+        # SAVE MATCHED PAGES PDF
+        # =====================================================
         matched_pdf = fitz.open()
 
         if matched_pages:
@@ -125,7 +138,12 @@ async def search_highlight(
             f"matched-{output_id}.pdf"
         )
 
-        matched_pdf.save(matched_pdf_path)
+        matched_pdf.save(
+            matched_pdf_path,
+            garbage=4,
+            deflate=True,
+            clean=True
+        )
 
         matched_pdf.close()
 
@@ -174,7 +192,6 @@ async def pdf_to_word(
         text = ""
 
         for page in pdf:
-
             text += page.get_text("text") + "\n"
 
         pdf.close()
@@ -252,7 +269,7 @@ def download_full_pdf(file_id: str):
 
 
 # =====================================================
-# DOWNLOAD MATCHED PAGES PDF
+# DOWNLOAD MATCHED PDF
 # =====================================================
 @app.get("/download-matched-pdf/{file_id}")
 def download_matched_pdf(file_id: str):
@@ -296,4 +313,4 @@ def download_docx(file_id: str):
         path,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         filename="converted.docx"
-    )
+    )SSS
