@@ -19,7 +19,7 @@ BASE_URL = "https://pdf-tools-backend-rvzt.onrender.com"
 # ---------------- CORS ---------------- #
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # allow all (Vercel + local)
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -28,6 +28,12 @@ app.add_middleware(
 # ---------------- STORAGE ---------------- #
 OUTPUT_DIR = "outputs"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+
+# ---------------- ROOT ---------------- #
+@app.get("/")
+def home():
+    return {"status": "Backend running"}
 
 
 # ---------------- SEARCH + HIGHLIGHT ---------------- #
@@ -47,34 +53,48 @@ async def search_highlight(
         pdf = fitz.open(input_path)
 
         result_text = ""
-        pages_with_match = []
+        matched_pages = []
 
         for page_num, page in enumerate(pdf):
             text = page.get_text("text")
 
             if search_text.lower() in text.lower():
-                pages_with_match.append(page_num + 1)
+                matched_pages.append(page_num + 1)
 
-            result_text += text
+            result_text += text + "\n"
 
         pdf.close()
 
         output_id = str(uuid.uuid4())
-        output_path = os.path.join(OUTPUT_DIR, f"result-{output_id}.txt")
+        output_path = os.path.join(
+            OUTPUT_DIR,
+            f"result-{output_id}.txt"
+        )
 
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(result_text)
 
+        download_url = f"{BASE_URL}/download-text/{output_id}"
+
+        print("DOWNLOAD URL:", download_url)
+
         return {
             "success": True,
-            "download_url": f"{BASE_URL}/download-text/{output_id}"
+            "matched_pages": matched_pages,
+            "download_url": download_url
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
         }
 
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
-# ---------------- PDF → WORD ---------------- #
+# ---------------- PDF TO WORD ---------------- #
 @app.post("/api/pdf-to-word")
 async def pdf_to_word(file: UploadFile = File(...)):
 
@@ -89,20 +109,27 @@ async def pdf_to_word(file: UploadFile = File(...)):
         pdf = fitz.open(input_path)
 
         text = ""
+
         for page in pdf:
             text += page.get_text("text") + "\n"
 
         pdf.close()
 
         output_id = str(uuid.uuid4())
-        output_path = os.path.join(OUTPUT_DIR, f"converted-{output_id}.docx")
+
+        output_path = os.path.join(
+            OUTPUT_DIR,
+            f"converted-{output_id}.docx"
+        )
 
         word = Document()
+
         word.add_heading("Converted PDF", level=1)
 
         if text.strip():
             for line in text.split("\n"):
                 line = line.strip()
+
                 if line:
                     word.add_paragraph(line)
         else:
@@ -110,9 +137,19 @@ async def pdf_to_word(file: UploadFile = File(...)):
 
         word.save(output_path)
 
+        download_url = f"{BASE_URL}/download-docx/{output_id}"
+
+        print("DOWNLOAD URL:", download_url)
+
         return {
             "success": True,
-            "download_url": f"{BASE_URL}/download-docx/{output_id}"
+            "download_url": download_url
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
         }
 
     finally:
@@ -121,9 +158,15 @@ async def pdf_to_word(file: UploadFile = File(...)):
 
 # ---------------- DOWNLOAD DOCX ---------------- #
 @app.get("/download-docx/{file_id}")
-def download_docx(file_id: str, background_tasks: BackgroundTasks):
+def download_docx(
+    file_id: str,
+    background_tasks: BackgroundTasks
+):
 
-    path = os.path.join(OUTPUT_DIR, f"converted-{file_id}.docx")
+    path = os.path.join(
+        OUTPUT_DIR,
+        f"converted-{file_id}.docx"
+    )
 
     if not os.path.exists(path):
         return {"error": "File not found"}
@@ -139,9 +182,15 @@ def download_docx(file_id: str, background_tasks: BackgroundTasks):
 
 # ---------------- DOWNLOAD TEXT ---------------- #
 @app.get("/download-text/{file_id}")
-def download_text(file_id: str, background_tasks: BackgroundTasks):
+def download_text(
+    file_id: str,
+    background_tasks: BackgroundTasks
+):
 
-    path = os.path.join(OUTPUT_DIR, f"result-{file_id}.txt")
+    path = os.path.join(
+        OUTPUT_DIR,
+        f"result-{file_id}.txt"
+    )
 
     if not os.path.exists(path):
         return {"error": "File not found"}
