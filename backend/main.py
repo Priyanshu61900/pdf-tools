@@ -83,13 +83,29 @@ async def search_highlight(
 
             if search_text.strip():
 
-                # exact search
+                # normal search
                 matches = page.search_for(
                     search_text,
-                    quads=False
+                    flags=fitz.TEXT_DEHYPHENATE
                 )
 
-                # fallback word-by-word search
+                # uppercase fallback
+                if not matches:
+
+                    matches = page.search_for(
+                        search_text.upper(),
+                        flags=fitz.TEXT_DEHYPHENATE
+                    )
+
+                # capitalized fallback
+                if not matches:
+
+                    matches = page.search_for(
+                        search_text.capitalize(),
+                        flags=fitz.TEXT_DEHYPHENATE
+                    )
+
+                # word-by-word fallback
                 if not matches:
 
                     words = search_text.split()
@@ -98,7 +114,7 @@ async def search_highlight(
 
                         found = page.search_for(
                             word,
-                            quads=False
+                            flags=fitz.TEXT_DEHYPHENATE
                         )
 
                         if found:
