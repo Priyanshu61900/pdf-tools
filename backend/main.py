@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
@@ -31,11 +31,12 @@ def home():
     return {"status": "Backend running"}
 
 
-# ---------------- SEARCH / HIGHLIGHT ---------------- #
+# ---------------- SEARCH + HIGHLIGHT ---------------- #
 @app.post("/api/search-highlight")
 async def search_highlight(
     file: UploadFile = File(...),
-    search_text: str = ""
+    search_text: str = "",
+    highlight_color: str = "yellow",
 ):
 
     temp_dir = tempfile.mkdtemp()
@@ -49,46 +50,78 @@ async def search_highlight(
 
         pdf = fitz.open(input_path)
 
-        result_text = ""
+        color_map = {
+            "yellow": (1, 1, 0),
+            "red": (1, 0, 0),
+            "green": (0, 1, 0),
+            "blue": (0, 0, 1),
+            "pink": (1, 0.4, 0.7),
+            "orange": (1, 0.5, 0),
+        }
 
-        for page in pdf:
-            result_text += page.get_text("text") + "\n"
-
-        pdf.close()
+        selected_color = color_map.get(
+            highlight_color.lower(),
+            (1, 1, 0)
+        )
 
         output_id = str(uuid.uuid4())
 
-        # ---------- TXT ----------
-        txt_path = os.path.join(
+        matched_pages = []
+
+        # ---------- SEARCH + HIGHLIGHT ----------
+        for page_num, page in enumerate(pdf):
+
+            matches = page.search_for(search_text)
+
+            if matches:
+                matched_pages.append(page_num)
+
+            for inst in matches:
+
+                highlight = page.add_highlight_annot(inst)
+
+                highlight.set_colors(stroke=selected_color)
+
+                highlight.update()
+
+        # ---------- FULL PDF ----------
+        full_pdf_path = os.path.join(
             OUTPUT_DIR,
-            f"result-{output_id}.txt"
+            f"full-{output_id}.pdf"
         )
 
-        with open(txt_path, "w", encoding="utf-8") as f:
-            f.write(result_text)
+        pdf.save(
+            full_pdf_path,
+            garbage=4,
+            deflate=True
+        )
 
-        # ---------- PDF ----------
-        pdf_path = os.path.join(
+        # ---------- MATCHED PAGES PDF ----------
+        matched_pdf = fitz.open()
+
+        for page_num in matched_pages:
+
+            matched_pdf.insert_pdf(
+                pdf,
+                from_page=page_num,
+                to_page=page_num
+            )
+
+        matched_pdf_path = os.path.join(
             OUTPUT_DIR,
-            f"result-{output_id}.pdf"
+            f"matched-{output_id}.pdf"
         )
 
-        doc = fitz.open()
+        matched_pdf.save(matched_pdf_path)
 
-        page = doc.new_page()
+        matched_pdf.close()
 
-        page.insert_text(
-            (72, 72),
-            result_text[:50000]
-        )
-
-        doc.save(pdf_path)
-        doc.close()
+        pdf.close()
 
         return {
             "success": True,
-            "txt_download_url": f"{BASE_URL}/download-text/{output_id}",
-            "pdf_download_url": f"{BASE_URL}/download-pdf/{output_id}"
+            "full_pdf_url": f"{BASE_URL}/download-full-pdf/{output_id}",
+            "matched_pdf_url": f"{BASE_URL}/download-matched-pdf/{output_id}"
         }
 
     except Exception as e:
@@ -137,6 +170,7 @@ async def pdf_to_word(file: UploadFile = File(...)):
         word.add_heading("Converted PDF", level=1)
 
         if text.strip():
+
             for line in text.split("\n"):
 
                 line = line.strip()
@@ -145,6 +179,7 @@ async def pdf_to_word(file: UploadFile = File(...)):
                     word.add_paragraph(line)
 
         else:
+
             word.add_paragraph("No extractable text found")
 
         word.save(output_path)
@@ -166,38 +201,13 @@ async def pdf_to_word(file: UploadFile = File(...)):
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
-# ---------------- DOWNLOAD TXT ---------------- #
-@app.get("/download-text/{file_id}")
-def download_text(
-    file_id: str,
-    background_tasks: BackgroundTasks
-):
+# ---------------- DOWNLOAD FULL PDF ---------------- #
+@app.get("/download-full-pdf/{file_id}")
+def download_full_pdf(file_id: str):
 
     path = os.path.join(
         OUTPUT_DIR,
-        f"result-{file_id}.txt"
-    )
-
-    if not os.path.exists(path):
-        return {"error": "File not found"}
-
-    return FileResponse(
-        path,
-        media_type="text/plain",
-        filename="result.txt"
-    )
-
-
-# ---------------- DOWNLOAD PDF ---------------- #
-@app.get("/download-pdf/{file_id}")
-def download_pdf(
-    file_id: str,
-    background_tasks: BackgroundTasks
-):
-
-    path = os.path.join(
-        OUTPUT_DIR,
-        f"result-{file_id}.pdf"
+        f"full-{file_id}.pdf"
     )
 
     if not os.path.exists(path):
@@ -206,16 +216,32 @@ def download_pdf(
     return FileResponse(
         path,
         media_type="application/pdf",
-        filename="result.pdf"
+        filename="highlighted-full.pdf"
+    )
+
+
+# ---------------- DOWNLOAD MATCHED PDF ---------------- #
+@app.get("/download-matched-pdf/{file_id}")
+def download_matched_pdf(file_id: str):
+
+    path = os.path.join(
+        OUTPUT_DIR,
+        f"matched-{file_id}.pdf"
+    )
+
+    if not os.path.exists(path):
+        return {"error": "File not found"}
+
+    return FileResponse(
+        path,
+        media_type="application/pdf",
+        filename="highlighted-pages.pdf"
     )
 
 
 # ---------------- DOWNLOAD DOCX ---------------- #
 @app.get("/download-docx/{file_id}")
-def download_docx(
-    file_id: str,
-    background_tasks: BackgroundTasks
-):
+def download_docx(file_id: str):
 
     path = os.path.join(
         OUTPUT_DIR,

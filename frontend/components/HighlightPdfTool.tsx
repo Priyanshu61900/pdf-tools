@@ -6,14 +6,19 @@ import { API_URL } from "@/lib/api"
 export default function HighlightPdfTool() {
 
   const [file, setFile] = useState<File | null>(null)
+
   const [searchText, setSearchText] = useState("")
-  const [txtUrl, setTxtUrl] = useState("")
-  const [pdfUrl, setPdfUrl] = useState("")
+
+  const [color, setColor] = useState("yellow")
+
+  const [fullPdfUrl, setFullPdfUrl] = useState("")
+  const [matchedPdfUrl, setMatchedPdfUrl] = useState("")
+
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async () => {
 
-    if (!file) return
+    if (!file || !searchText) return
 
     setLoading(true)
 
@@ -21,6 +26,7 @@ export default function HighlightPdfTool() {
 
     formData.append("file", file)
     formData.append("search_text", searchText)
+    formData.append("highlight_color", color)
 
     const res = await fetch(`${API_URL}/api/search-highlight`, {
       method: "POST",
@@ -29,8 +35,8 @@ export default function HighlightPdfTool() {
 
     const data = await res.json()
 
-    setTxtUrl(data.txt_download_url)
-    setPdfUrl(data.pdf_download_url)
+    setFullPdfUrl(data.full_pdf_url)
+    setMatchedPdfUrl(data.matched_pdf_url)
 
     setLoading(false)
   }
@@ -51,31 +57,44 @@ export default function HighlightPdfTool() {
         onChange={(e) => setSearchText(e.target.value)}
       />
 
+      <select
+        value={color}
+        onChange={(e) => setColor(e.target.value)}
+        className="w-full mt-4 p-3 rounded-xl bg-zinc-800 text-white"
+      >
+        <option value="yellow">Yellow</option>
+        <option value="red">Red</option>
+        <option value="green">Green</option>
+        <option value="blue">Blue</option>
+        <option value="pink">Pink</option>
+        <option value="orange">Orange</option>
+      </select>
+
       <button
         onClick={handleSubmit}
         disabled={loading}
         className="w-full bg-white text-black px-6 py-3 mt-4 rounded-xl font-bold"
       >
-        {loading ? "Processing..." : "Process PDF"}
+        {loading ? "Processing..." : "Highlight PDF"}
       </button>
 
-      {(txtUrl || pdfUrl) && (
+      {(fullPdfUrl || matchedPdfUrl) && (
         <div className="mt-6 flex flex-col gap-4">
 
           <a
-            href={txtUrl}
+            href={matchedPdfUrl}
             target="_blank"
             className="bg-green-500 text-black p-4 rounded-2xl text-center font-bold"
           >
-            Download TXT
+            Download Highlighted Pages Only
           </a>
 
           <a
-            href={pdfUrl}
+            href={fullPdfUrl}
             target="_blank"
             className="bg-blue-500 text-white p-4 rounded-2xl text-center font-bold"
           >
-            Download PDF
+            Download Full Highlighted PDF
           </a>
 
         </div>

@@ -6,9 +6,11 @@ import { API_URL } from "@/lib/api"
 export default function SearchPdfTool() {
 
   const [file, setFile] = useState<File | null>(null)
+
   const [text, setText] = useState("")
-  const [txtUrl, setTxtUrl] = useState("")
-  const [pdfUrl, setPdfUrl] = useState("")
+
+  const [fullPdfUrl, setFullPdfUrl] = useState("")
+
   const [loading, setLoading] = useState(false)
 
   const handle = async () => {
@@ -20,7 +22,11 @@ export default function SearchPdfTool() {
     const form = new FormData()
 
     form.append("file", file)
+
     form.append("search_text", text)
+
+    // ALWAYS FIXED YELLOW
+    form.append("highlight_color", "yellow")
 
     const res = await fetch(`${API_URL}/api/search-highlight`, {
       method: "POST",
@@ -29,8 +35,7 @@ export default function SearchPdfTool() {
 
     const data = await res.json()
 
-    setTxtUrl(data.txt_download_url)
-    setPdfUrl(data.pdf_download_url)
+    setFullPdfUrl(data.full_pdf_url)
 
     setLoading(false)
   }
@@ -45,8 +50,8 @@ export default function SearchPdfTool() {
       />
 
       <input
-        className="w-full mt-4 p-3 rounded-xl bg-zinc-800"
-        placeholder="Enter keyword"
+        className="w-full mt-4 p-3 rounded-xl bg-zinc-800 text-white"
+        placeholder="Search text, number or keyword"
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
@@ -55,26 +60,23 @@ export default function SearchPdfTool() {
         onClick={handle}
         className="w-full bg-white text-black mt-4 p-4 rounded-2xl font-bold"
       >
-        {loading ? "Processing..." : "Search"}
+        {loading ? "Processing..." : "Search PDF"}
       </button>
 
-      {(txtUrl || pdfUrl) && (
-        <div className="mt-6 flex flex-col gap-4">
+      <p className="text-zinc-400 text-sm mt-4 text-center">
+        Want only highlighted pages or custom colors?
+        Use the Highlight PDF Tool.
+      </p>
+
+      {fullPdfUrl && (
+        <div className="mt-6">
 
           <a
-            href={txtUrl}
+            href={fullPdfUrl}
             target="_blank"
-            className="bg-green-500 text-black p-4 rounded-2xl text-center font-bold"
+            className="block bg-yellow-500 text-black p-4 rounded-2xl text-center font-bold"
           >
-            Download TXT
-          </a>
-
-          <a
-            href={pdfUrl}
-            target="_blank"
-            className="bg-blue-500 text-white p-4 rounded-2xl text-center font-bold"
-          >
-            Download PDF
+            Download Full Highlighted PDF
           </a>
 
         </div>
