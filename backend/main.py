@@ -1,31 +1,18 @@
-from fastapi import FastAPI, UploadFile, File, Form, Request
+from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse
 
 import os
 import uuid
 import tempfile
 import shutil
+
 import fitz
-import re
+from docx import Document
 
 app = FastAPI()
 
-# =========================
-# CONFIG
-# =========================
-
 BASE_URL = "https://pdf-tools-backend-rvzt.onrender.com"
-
-OUTPUT_DIR = "outputs"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-MAX_FILE_SIZE = 20 * 1024 * 1024  # 20MB
-
-
-# =========================
-# CORS
-# =========================
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,109 +22,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+OUTPUT_DIR = "outputs"
 
-# =========================
-# FILE SIZE LIMIT
-# =========================
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-@app.middleware("http")
-async def limit_upload_size(request: Request, call_next):
-
-    content_length = request.headers.get("content-length")
-
-    if content_length and int(content_length) > MAX_FILE_SIZE:
-        return JSONResponse(
-            status_code=413,
-            content={
-                "success": False,
-                "error": "File too large. Max 20MB allowed."
-            }
-        )
-
-    return await call_next(request)
-
-
-# =========================
-# NORMALIZER
-# =========================
-
-def normalize(text: str):
-    return re.sub(r"\s+", "", text.lower())
-
-
-def fuzzy_match(page_text: str, search_text: str):
-
-    page_norm = normalize(page_text)
-
-    terms = search_text.lower().split()
-
-    return all(term in page_norm for term in terms)
-
-
-# =========================
-# HEALTH CHECK
-# =========================
 
 @app.get("/")
 def home():
-    return {
-        "status": "running"
-    }
+    return {"status": "Backend running"}
 
 
-# =========================
+# =====================================================
 # SEARCH + HIGHLIGHT
-# =========================
-
+# =====================================================
 @app.post("/api/search-highlight")
 async def search_highlight(
     file: UploadFile = File(...),
-    search_text: str = Form(...),
-    highlight_color: str = Form("yellow"),
+    search_text: str = "",
+    highlight_color: str = "yellow",
 ):
 
     temp_dir = tempfile.mkdtemp()
 
-    pdf = None
-
     try:
 
-        # =========================
-        # VALIDATION
-        # =========================
+        input_path = os.path.join(
+            temp_dir,
+            file.filename
+        )
 
-        if not file.filename:
-            return {
-                "success": False,
-                "error": "No file uploaded"
-            }
-
-        if not file.filename.lower().endswith(".pdf"):
-            return {
-                "success": False,
-                "error": "Only PDF files are allowed"
-            }
-
-        # =========================
-        # SAVE TEMP FILE
-        # =========================
-
-        safe_filename = file.filename.replace("/", "_").replace("\\", "_")
-
-        input_path = os.path.join(temp_dir, safe_filename)
-
-        with open(input_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-
-        # =========================
-        # OPEN PDF
-        # =========================
+        with open(input_path, "wb") as f:
+            shutil.copyfileobj(file.file, f)
 
         pdf = fitz.open(input_path)
-
-        # =========================
-        # COLORS
-        # =========================
 
         color_map = {
             "yellow": (1, 1, 0),
@@ -148,117 +65,79 @@ async def search_highlight(
             "orange": (1, 0.5, 0),
         }
 
-        color = color_map.get(
+        selected_color = color_map.get(
             highlight_color.lower(),
             (1, 1, 0)
         )
 
-        search_terms = search_text.lower().split()
+        output_id = str(uuid.uuid4())
 
-        total_matches = 0
+        matched_pages = []
 
-        # =========================
-        # PROCESS PAGES
-        # =========================
+        # ---------- PROCESS ----------
+        for page_num in range(len(pdf)):
 
-        for page_number in range(len(pdf)):
+            page = pdf[page_num]
 
-            page = pdf[page_number]
+            matches = []
 
-            try:
+            if search_text.strip():
+                matches = page.search_for(search_text)
 
-                page_text = page.get_text()
+            if matches:
+                matched_pages.append(page_num)
 
-                if not page_text.strip():
-                    continue
+            for inst in matches:
 
-                # fuzzy filter
-                if search_text.strip():
+                highlight = page.add_highlight_annot(inst)
 
-                    if not fuzzy_match(page_text, search_text):
-                        continue
+                highlight.set_colors(stroke=selected_color)
 
-                matches = []
+                highlight.update()
 
-                # =========================
-                # FULL PHRASE SEARCH
-                # =========================
-
-                if search_text.strip():
-                    matches = page.search_for(search_text)
-
-                # =========================
-                # FALLBACK WORD SEARCH
-                # =========================
-
-                if not matches:
-
-                    for term in search_terms:
-
-                        try:
-                            word_matches = page.search_for(term)
-
-                            if word_matches:
-                                matches.extend(word_matches)
-
-                        except Exception as e:
-                            print(f"Word search error: {e}")
-
-                # =========================
-                # HIGHLIGHT
-                # =========================
-
-                for rect in matches:
-
-                    try:
-
-                        annot = page.add_highlight_annot(rect)
-
-                        annot.set_colors(stroke=color)
-
-                        annot.set_opacity(0.5)
-
-                        annot.update()
-
-                        total_matches += 1
-
-                    except Exception as e:
-                        print(f"Highlight error: {e}")
-
-            except Exception as e:
-                print(f"Page processing error on page {page_number}: {e}")
-
-        # =========================
-        # SAVE OUTPUT
-        # =========================
-
-        file_id = str(uuid.uuid4())
-
-        output_path = os.path.join(
+        # ---------- FULL PDF ----------
+        full_pdf_path = os.path.join(
             OUTPUT_DIR,
-            f"{file_id}.pdf"
+            f"full-{output_id}.pdf"
         )
 
-        # safer save for Render
-        pdf.save(output_path)
+        pdf.save(full_pdf_path)
+
+        # ---------- MATCHED PAGES PDF ----------
+        matched_pdf = fitz.open()
+
+        if matched_pages:
+
+            for page_num in matched_pages:
+
+                matched_pdf.insert_pdf(
+                    pdf,
+                    from_page=page_num,
+                    to_page=page_num
+                )
+
+        else:
+
+            matched_pdf.new_page()
+
+        matched_pdf_path = os.path.join(
+            OUTPUT_DIR,
+            f"matched-{output_id}.pdf"
+        )
+
+        matched_pdf.save(matched_pdf_path)
+
+        matched_pdf.close()
 
         pdf.close()
 
-        pdf = None
-
-        # =========================
-        # RESPONSE
-        # =========================
-
         return {
             "success": True,
-            "matches_found": total_matches,
-            "download_url": f"{BASE_URL}/download/{file_id}"
+            "full_pdf_url": f"{BASE_URL}/download-full-pdf/{output_id}",
+            "matched_pdf_url": f"{BASE_URL}/download-matched-pdf/{output_id}"
         }
 
     except Exception as e:
-
-        print("MAIN ERROR:", str(e))
 
         return {
             "success": False,
@@ -267,64 +146,154 @@ async def search_highlight(
 
     finally:
 
-        try:
-            if pdf:
-                pdf.close()
-        except:
-            pass
-
-        try:
-            shutil.rmtree(temp_dir, ignore_errors=True)
-        except:
-            pass
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 
-# =========================
-# DOWNLOAD PDF
-# =========================
+# =====================================================
+# PDF TO WORD
+# =====================================================
+@app.post("/api/pdf-to-word")
+async def pdf_to_word(
+    file: UploadFile = File(...)
+):
 
-@app.get("/download/{file_id}")
-def download(file_id: str):
+    temp_dir = tempfile.mkdtemp()
 
     try:
 
-        path = os.path.join(
-            OUTPUT_DIR,
-            f"{file_id}.pdf"
+        input_path = os.path.join(
+            temp_dir,
+            file.filename
         )
 
-        if not os.path.exists(path):
+        with open(input_path, "wb") as f:
+            shutil.copyfileobj(file.file, f)
 
-            return JSONResponse(
-                status_code=404,
-                content={
-                    "success": False,
-                    "error": "File not found"
-                }
+        pdf = fitz.open(input_path)
+
+        text = ""
+
+        for page in pdf:
+
+            text += page.get_text("text") + "\n"
+
+        pdf.close()
+
+        output_id = str(uuid.uuid4())
+
+        output_path = os.path.join(
+            OUTPUT_DIR,
+            f"converted-{output_id}.docx"
+        )
+
+        word = Document()
+
+        word.add_heading(
+            "Converted PDF",
+            level=1
+        )
+
+        if text.strip():
+
+            for line in text.split("\n"):
+
+                line = line.strip()
+
+                if line:
+                    word.add_paragraph(line)
+
+        else:
+
+            word.add_paragraph(
+                "No extractable text found"
             )
 
-        return FileResponse(
-            path=path,
-            media_type="application/pdf",
-            filename="highlighted.pdf"
-        )
+        word.save(output_path)
+
+        return {
+            "success": True,
+            "download_url": f"{BASE_URL}/download-docx/{output_id}"
+        }
 
     except Exception as e:
 
-        print("DOWNLOAD ERROR:", str(e))
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
-        return JSONResponse(
-            status_code=500,
-            content={
-                "success": False,
-                "error": str(e)
-            }
-        )
+    finally:
+
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 
-# =========================
-# START SERVER
-# =========================
+# =====================================================
+# DOWNLOAD FULL PDF
+# =====================================================
+@app.get("/download-full-pdf/{file_id}")
+def download_full_pdf(file_id: str):
 
-# Run locally:
-# uvicorn main:app --reload --host 0.0.0.0 --port 8000
+    path = os.path.join(
+        OUTPUT_DIR,
+        f"full-{file_id}.pdf"
+    )
+
+    if not os.path.exists(path):
+
+        return {
+            "error": "File not found"
+        }
+
+    return FileResponse(
+        path,
+        media_type="application/pdf",
+        filename="highlighted-full.pdf"
+    )
+
+
+# =====================================================
+# DOWNLOAD MATCHED PAGES PDF
+# =====================================================
+@app.get("/download-matched-pdf/{file_id}")
+def download_matched_pdf(file_id: str):
+
+    path = os.path.join(
+        OUTPUT_DIR,
+        f"matched-{file_id}.pdf"
+    )
+
+    if not os.path.exists(path):
+
+        return {
+            "error": "File not found"
+        }
+
+    return FileResponse(
+        path,
+        media_type="application/pdf",
+        filename="highlighted-pages.pdf"
+    )
+
+
+# =====================================================
+# DOWNLOAD DOCX
+# =====================================================
+@app.get("/download-docx/{file_id}")
+def download_docx(file_id: str):
+
+    path = os.path.join(
+        OUTPUT_DIR,
+        f"converted-{file_id}.docx"
+    )
+
+    if not os.path.exists(path):
+
+        return {
+            "error": "File not found"
+        }
+
+    return FileResponse(
+        path,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        filename="converted.docx"
+    )
