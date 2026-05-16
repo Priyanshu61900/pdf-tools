@@ -13,10 +13,13 @@ from docx import Document
 # ---------------- APP ---------------- #
 app = FastAPI()
 
+# ---------------- CONFIG ---------------- #
+BASE_URL = "https://pdf-tools-backend-rvzt.onrender.com"
+
 # ---------------- CORS ---------------- #
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # allow frontend (Vercel)
+    allow_origins=["*"],  # allow all (Vercel + local)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,7 +30,7 @@ OUTPUT_DIR = "outputs"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
-# ---------------- SEARCH + HIGHLIGHT API ---------------- #
+# ---------------- SEARCH + HIGHLIGHT ---------------- #
 @app.post("/api/search-highlight")
 async def search_highlight(
     file: UploadFile = File(...),
@@ -64,7 +67,7 @@ async def search_highlight(
 
         return {
             "success": True,
-            "download_url": f"/download-text/{output_id}"
+            "download_url": f"{BASE_URL}/download-text/{output_id}"
         }
 
     finally:
@@ -109,7 +112,7 @@ async def pdf_to_word(file: UploadFile = File(...)):
 
         return {
             "success": True,
-            "download_url": f"/download-docx/{output_id}"
+            "download_url": f"{BASE_URL}/download-docx/{output_id}"
         }
 
     finally:
