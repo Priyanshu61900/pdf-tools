@@ -35,7 +35,7 @@ OUTPUT_DIR = "outputs"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # =====================================================
-# BASE URL (FIXED)
+# BASE URL
 # =====================================================
 
 BASE_URL = "https://pdf-tools-backend-rvzt.onrender.com"
@@ -107,7 +107,7 @@ async def search_highlight(
         matched_pages = []
 
         # =================================================
-        # PROCESS PDF (FAST + WORKING)
+        # PROCESS PDF
         # =================================================
 
         for page_num in range(len(pdf)):
@@ -117,7 +117,7 @@ async def search_highlight(
             found_on_page = False
 
             # ---------------------------------------------
-            # FAST DIRECT SEARCH
+            # DIRECT SEARCH
             # ---------------------------------------------
 
             matches = page.search_for(search_text)
@@ -158,6 +158,10 @@ async def search_highlight(
 
                 annot.update()
 
+            # ---------------------------------------------
+            # SAVE MATCHED PAGE NUMBER
+            # ---------------------------------------------
+
             if found_on_page:
 
                 matched_pages.append(page_num)
@@ -181,17 +185,14 @@ async def search_highlight(
         pdf.close()
 
         # =================================================
-        # REOPEN SAVED PDF
+        # CREATE MATCHED PAGES PDF
         # =================================================
 
         saved_pdf = fitz.open(full_pdf_path)
 
-        # =================================================
-        # CREATE MATCHED PDF
-        # =================================================
-
         matched_pdf = fitz.open()
 
+        # ONLY INSERT MATCHED PAGES
         for page_num in matched_pages:
 
             matched_pdf.insert_pdf(
@@ -199,6 +200,11 @@ async def search_highlight(
                 from_page=page_num,
                 to_page=page_num
             )
+
+        # IF NOTHING FOUND
+        if len(matched_pages) == 0:
+
+            matched_pdf.new_page()
 
         matched_pdf_path = os.path.join(
             OUTPUT_DIR,
