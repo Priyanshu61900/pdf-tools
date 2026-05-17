@@ -35,13 +35,10 @@ OUTPUT_DIR = "outputs"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # =====================================================
-# BASE URL
+# BASE URL (FIXED)
 # =====================================================
 
-BASE_URL = os.getenv(
-    "BASE_URL",
-    "http://localhost:10000"
-)
+BASE_URL = "https://pdf-tools-backend-rvzt.onrender.com"
 
 # =====================================================
 # HOME
@@ -110,7 +107,7 @@ async def search_highlight(
         matched_pages = []
 
         # =================================================
-        # PROCESS PDF (FIXED FAST VERSION)
+        # PROCESS PDF (FAST + WORKING)
         # =================================================
 
         for page_num in range(len(pdf)):
@@ -126,7 +123,7 @@ async def search_highlight(
             matches = page.search_for(search_text)
 
             # ---------------------------------------------
-            # FALLBACK PARTIAL + CASE INSENSITIVE SEARCH
+            # FALLBACK PARTIAL SEARCH
             # ---------------------------------------------
 
             if not matches:
