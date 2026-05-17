@@ -7,32 +7,54 @@ export default function ExtractPagesTool() {
 
   const [file, setFile] = useState<File | null>(null)
   const [text, setText] = useState("")
-  const [txtUrl, setTxtUrl] = useState("")
+  const [color, setColor] = useState("yellow")
   const [pdfUrl, setPdfUrl] = useState("")
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const handle = async () => {
 
-    if (!file || !text) return
+    if (!file) {
+      setError("Please upload a PDF")
+      return
+    }
 
-    setLoading(true)
+    if (!text.trim()) {
+      setError("Please enter text")
+      return
+    }
 
-    const form = new FormData()
+    try {
+      setLoading(true)
+      setError("")
+      setPdfUrl("")
 
-    form.append("file", file)
-    form.append("search_text", text)
+      const form = new FormData()
 
-    const res = await fetch(`${API_URL}/api/search-highlight`, {
-      method: "POST",
-      body: form,
-    })
+      form.append("file", file)
+      form.append("search_text", text)
+      form.append("highlight_color", color)
 
-    const data = await res.json()
+      const res = await fetch(`${API_URL}/api/search-highlight`, {
+        method: "POST",
+        body: form,
+      })
 
-    setTxtUrl(data.txt_download_url)
-    setPdfUrl(data.pdf_download_url)
+      const data = await res.json()
 
-    setLoading(false)
+      if (!data.success) {
+        setError(data.error || "Backend error")
+        return
+      }
+
+      setPdfUrl(data.matched_pdf_url)
+
+    } catch (err) {
+      console.error(err)
+      setError("Something went wrong")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -51,6 +73,19 @@ export default function ExtractPagesTool() {
         onChange={(e) => setText(e.target.value)}
       />
 
+      <select
+        value={color}
+        onChange={(e) => setColor(e.target.value)}
+        className="w-full mt-4 p-3 rounded-xl bg-zinc-800 text-white"
+      >
+        <option value="yellow">Yellow</option>
+        <option value="red">Red</option>
+        <option value="green">Green</option>
+        <option value="blue">Blue</option>
+        <option value="pink">Pink</option>
+        <option value="orange">Orange</option>
+      </select>
+
       <button
         onClick={handle}
         disabled={loading}
@@ -59,25 +94,21 @@ export default function ExtractPagesTool() {
         {loading ? "Processing..." : "Extract Pages"}
       </button>
 
-      {(txtUrl || pdfUrl) && (
-        <div className="mt-6 flex flex-col gap-4">
+      {error && (
+        <p className="text-red-500 mt-4 text-center">
+          {error}
+        </p>
+      )}
 
-          <a
-            href={txtUrl}
-            target="_blank"
-            className="bg-green-500 text-black p-4 rounded-2xl text-center font-bold"
-          >
-            Download TXT
-          </a>
-
+      {pdfUrl && (
+        <div className="mt-6">
           <a
             href={pdfUrl}
             target="_blank"
-            className="bg-blue-500 text-white p-4 rounded-2xl text-center font-bold"
+            className="block bg-green-500 text-black p-4 rounded-2xl text-center font-bold"
           >
-            Download PDF
+            Download Highlighted Matching Pages PDF
           </a>
-
         </div>
       )}
 
