@@ -7,7 +7,11 @@ const navLinks = [
     href: tool.href,
     label: tool.shortTitle,
   })),
+  { href: "/pricing", label: "Pricing" },
+  { href: "/api-access", label: "API" },
+  { href: "/resources", label: "Resources" },
   { href: "/guides", label: "Guides" },
+  { href: "/login", label: "Login" },
 ]
 
 export default function SiteHeader() {

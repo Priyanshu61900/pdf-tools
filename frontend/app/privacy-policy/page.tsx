@@ -31,11 +31,25 @@ export default function PrivacyPolicyPage() {
           ],
         },
         {
+          title: "Accounts And Google Login",
+          body: [
+            "If you choose to log in or register with Google, we may receive basic profile information such as your name, email address and profile image. This is used to create your account session and manage access to premium tools or API features.",
+            "Google login is optional. You can continue using free tools that do not require an account unless a feature specifically requires sign-in.",
+          ],
+        },
+        {
           title: "Cookies And Advertising",
           body: [
             "We may use cookies and similar technologies to operate the site, remember preferences, measure traffic and support advertising.",
             "This site may display ads served by Google AdSense or other advertising partners. Google may use cookies, including the DoubleClick cookie, to serve ads based on your visits to this and other websites.",
             "You can learn more about how Google uses data from partner sites at https://policies.google.com/technologies/partner-sites and manage ad personalization at https://adssettings.google.com/.",
+          ],
+        },
+        {
+          title: "Payments, API Access And Affiliate Links",
+          body: [
+            "If paid plans, API access or subscriptions are enabled, payment processors may collect billing details needed to complete transactions. We do not intentionally store full card details on our own servers.",
+            "Some resource or recommendation pages may include affiliate links. If you click an affiliate link or purchase through a partner, the partner may process information according to its own policies.",
           ],
         },
         {

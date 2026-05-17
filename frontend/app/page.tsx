@@ -149,6 +149,33 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="max-w-5xl mx-auto px-6 pb-20">
+        <h2 className="text-4xl font-bold mb-6">
+          Free Tools With Optional Pro Features
+        </h2>
+
+        <p className="text-zinc-400 leading-8 mb-6">
+          Small PDF tasks stay free. Paid plans are designed for users who need
+          larger files, batch processing, OCR for scanned PDFs, watermark
+          removal, unlimited usage or developer API access.
+        </p>
+
+        <div className="flex flex-wrap gap-4">
+          <Link
+            href="/pricing"
+            className="bg-white text-black px-6 py-3 rounded-lg font-semibold"
+          >
+            View Pricing
+          </Link>
+          <Link
+            href="/api-access"
+            className="border border-zinc-700 px-6 py-3 rounded-lg"
+          >
+            PDF API Access
+          </Link>
+        </div>
+      </section>
+
       {/* SEO CONTENT */}
       <section className="max-w-5xl mx-auto px-6 pb-20">
 

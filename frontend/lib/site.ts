@@ -35,8 +35,12 @@ export const tools = [
 ]
 
 export const companyLinks = [
+  { href: "/pricing", label: "Pricing" },
+  { href: "/api-access", label: "API Access" },
+  { href: "/resources", label: "Resources" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
+  { href: "/login", label: "Login" },
   { href: "/privacy-policy", label: "Privacy Policy" },
   { href: "/cookie-policy", label: "Cookie Policy" },
   { href: "/terms", label: "Terms" },

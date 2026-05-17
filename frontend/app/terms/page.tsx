@@ -37,6 +37,27 @@ export default function TermsPage() {
           ],
         },
         {
+          title: "Free And Paid Plans",
+          body: [
+            "Small PDF tasks may be offered for free. Larger files, batch processing, OCR, watermark removal, unlimited usage and similar premium features may require a paid plan.",
+            "Paid features, prices and limits may change over time. If checkout is enabled, the price and billing period shown at checkout will control your purchase.",
+          ],
+        },
+        {
+          title: "Developer API Access",
+          body: [
+            "API access is intended for developers who want to process PDFs programmatically. You are responsible for securing your API keys and for all activity under your account.",
+            "We may apply request limits, usage rules, abuse prevention checks and billing requirements to API access.",
+          ],
+        },
+        {
+          title: "Affiliate Recommendations",
+          body: [
+            "The website may recommend third-party PDF editors, hosting services, AI tools, resume builders and office tools. Some recommendations may include affiliate links.",
+            "Third-party products are not controlled by us. You should review each provider's terms, pricing and privacy policy before purchasing.",
+          ],
+        },
+        {
           title: "Availability",
           body: [
             "We try to keep the site available, but we do not guarantee uninterrupted access, error-free processing or permanent storage of uploaded or generated files.",

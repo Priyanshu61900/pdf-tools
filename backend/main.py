@@ -2,9 +2,10 @@ import os
 import uuid
 import shutil
 import tempfile
+from typing import Optional
 
 import fitz
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import Depends, FastAPI, Header, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
@@ -39,6 +40,39 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 # =====================================================
 
 BASE_URL = "https://pdf-tools-backend-rvzt.onrender.com"
+
+# =====================================================
+# PAID API KEYS
+# =====================================================
+
+def verify_api_key(
+    authorization: Optional[str] = Header(default=None),
+    x_api_key: Optional[str] = Header(default=None),
+):
+    configured_keys = {
+        key.strip()
+        for key in os.getenv("PDF_TOOLS_API_KEYS", "").split(",")
+        if key.strip()
+    }
+
+    if not configured_keys:
+        raise HTTPException(
+            status_code=503,
+            detail="Paid API access is not configured yet"
+        )
+
+    provided_key = x_api_key
+
+    if authorization and authorization.lower().startswith("bearer "):
+        provided_key = authorization[7:].strip()
+
+    if not provided_key or provided_key not in configured_keys:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or missing API key"
+        )
+
+    return provided_key
 
 # =====================================================
 # HOME
@@ -257,6 +291,49 @@ async def search_highlight(
             temp_dir,
             ignore_errors=True
         )
+
+# =====================================================
+# PAID DEVELOPER API ENDPOINTS
+# =====================================================
+
+@app.post("/api/v1/search")
+async def api_search_pdf(
+    file: UploadFile = File(...),
+    search_text: str = Form(...),
+    highlight_color: str = Form("yellow"),
+    api_key: str = Depends(verify_api_key),
+):
+    return await search_highlight(
+        file=file,
+        search_text=search_text,
+        highlight_color=highlight_color
+    )
+
+@app.post("/api/v1/highlight")
+async def api_highlight_pdf(
+    file: UploadFile = File(...),
+    search_text: str = Form(...),
+    highlight_color: str = Form("yellow"),
+    api_key: str = Depends(verify_api_key),
+):
+    return await search_highlight(
+        file=file,
+        search_text=search_text,
+        highlight_color=highlight_color
+    )
+
+@app.post("/api/v1/extract-matching-pages")
+async def api_extract_matching_pages(
+    file: UploadFile = File(...),
+    search_text: str = Form(...),
+    highlight_color: str = Form("yellow"),
+    api_key: str = Depends(verify_api_key),
+):
+    return await search_highlight(
+        file=file,
+        search_text=search_text,
+        highlight_color=highlight_color
+    )
 
 # =====================================================
 # DOWNLOAD FULL PDF
