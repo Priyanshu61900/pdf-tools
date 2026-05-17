@@ -1,3 +1,4 @@
+import AuthPanel from "@/components/AuthPanel"
 import JsonLd from "@/components/JsonLd"
 import Link from "next/link"
 import { guides } from "@/lib/guides"
@@ -67,34 +68,39 @@ export default function Home() {
       {/* HERO */}
       <section className="border-b border-zinc-800 bg-gradient-to-b from-zinc-900 to-black">
 
-        <div className="max-w-7xl mx-auto px-6 py-24 text-center">
+        <div className="max-w-7xl mx-auto px-6 py-16 grid gap-10 lg:grid-cols-[1fr_420px] lg:items-center">
 
-          <h1 className="text-6xl font-bold leading-tight">
-            Free PDF Tools Online
-          </h1>
+          <div>
+            <h1 className="text-5xl md:text-6xl font-bold leading-tight">
+              Free PDF Tools Online
+            </h1>
 
-          <p className="text-zinc-400 mt-6 text-xl max-w-3xl mx-auto">
-            Search PDF text, highlight matches, extract relevant pages,
-            and convert PDF files to Word documents from your browser.
-          </p>
+            <p className="text-zinc-400 mt-6 text-xl max-w-3xl leading-8">
+              Browse the PDF tools freely. Sign up to process files with a free
+              5-page limit, or upgrade to Premium for larger PDFs and repeated
+              processing.
+            </p>
 
-          <div className="flex flex-wrap justify-center gap-4 mt-10">
+            <div className="flex flex-wrap gap-4 mt-10">
 
-            <Link
-              href="/tools"
-              className="bg-white text-black px-8 py-4 rounded-2xl font-semibold"
-            >
-              Browse PDF Tools
-            </Link>
+              <Link
+                href="/tools"
+                className="bg-white text-black px-8 py-4 rounded-2xl font-semibold"
+              >
+                Browse PDF Tools
+              </Link>
 
-            <Link
-              href="/guides"
-              className="border border-zinc-700 px-8 py-4 rounded-2xl"
-            >
-              Read PDF Guides
-            </Link>
+              <Link
+                href="/pricing"
+                className="border border-zinc-700 px-8 py-4 rounded-2xl"
+              >
+                Premium Plans
+              </Link>
 
+            </div>
           </div>
+
+          <AuthPanel mode="register" />
 
         </div>
 
@@ -203,10 +209,10 @@ export default function Home() {
 
         <div className="grid md:grid-cols-2 gap-4">
           {[
-            "No account is required for the core tools.",
+            "Tools are visible to everyone, and file processing requires a free account.",
+            "Free accounts can process PDFs up to 5 pages.",
+            "Premium unlocks larger PDFs and repeated processing.",
             "Each tool has a simple single-purpose workflow.",
-            "Search and highlight tools create downloadable PDF results.",
-            "Policy, contact and privacy pages are available for transparency.",
           ].map((item) => (
             <p
               key={item}

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { API_URL } from "@/lib/api"
+import ToolGateMessage from "@/components/ToolGateMessage"
 
 export default function PdfToWordTool() {
 
@@ -9,6 +9,7 @@ export default function PdfToWordTool() {
   const [loading, setLoading] = useState(false)
   const [docxUrl, setDocxUrl] = useState("")
   const [error, setError] = useState("")
+  const [actionCode, setActionCode] = useState("")
 
   const handle = async () => {
 
@@ -16,6 +17,7 @@ export default function PdfToWordTool() {
 
     setLoading(true)
     setError("")
+    setActionCode("")
     setDocxUrl("")
 
     try {
@@ -24,12 +26,18 @@ export default function PdfToWordTool() {
 
       form.append("file", file)
 
-      const res = await fetch(`${API_URL}/api/pdf-to-word`, {
+      const res = await fetch("/api/tools/pdf-to-word", {
         method: "POST",
         body: form,
       })
 
       const data = await res.json()
+
+      if (!data.success) {
+        setError(data.error || "Conversion failed")
+        setActionCode(data.code || "")
+        return
+      }
 
       setDocxUrl(data.download_url)
 
@@ -64,6 +72,8 @@ export default function PdfToWordTool() {
           {error}
         </p>
       )}
+
+      <ToolGateMessage code={actionCode} />
 
       {docxUrl && (
         <a

@@ -5,7 +5,7 @@ import { absoluteUrl } from "@/lib/site"
 export const metadata = {
   title: "PDF API Access - Search And Highlight PDF API",
   description:
-    "Developer API access for PDF search, PDF highlighting and extracting matching pages. API access starts at ₹99 per month.",
+    "Developer API access for PDF search, PDF highlighting and extracting matching pages. API access starts at Rs. 99 per month.",
   keywords: [
     "PDF API",
     "PDF Search API",
@@ -71,7 +71,7 @@ export default function ApiAccessPage() {
         <p className="text-zinc-400 leading-8 mt-6 max-w-3xl mx-auto">
           Turn the backend into a paid developer API for PDF search, PDF
           highlighting and extracting matching pages. API access starts at
-          ₹99/month.
+          Rs. 99/month.
         </p>
 
         <div className="flex flex-wrap justify-center gap-4 mt-8">

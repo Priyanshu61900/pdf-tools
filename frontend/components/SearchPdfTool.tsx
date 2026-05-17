@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { API_URL } from "@/lib/api"
+import ToolGateMessage from "@/components/ToolGateMessage"
 
 export default function SearchPdfTool() {
   const [file, setFile] = useState<File | null>(null)
@@ -9,6 +9,7 @@ export default function SearchPdfTool() {
   const [fullPdfUrl, setFullPdfUrl] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [actionCode, setActionCode] = useState("")
 
   const handle = async () => {
     if (!file) {
@@ -24,6 +25,7 @@ export default function SearchPdfTool() {
     try {
       setLoading(true)
       setError("")
+      setActionCode("")
       setFullPdfUrl("")
 
       const form = new FormData()
@@ -32,7 +34,7 @@ export default function SearchPdfTool() {
       form.append("search_text", text)
       form.append("highlight_color", "yellow")
 
-      const res = await fetch(`${API_URL}/api/search-highlight`, {
+      const res = await fetch("/api/tools/search-highlight", {
         method: "POST",
         body: form,
       })
@@ -43,6 +45,7 @@ export default function SearchPdfTool() {
 
       if (!data.success) {
         setError(data.error || "Backend error")
+        setActionCode(data.code || "")
         return
       }
 
@@ -90,6 +93,8 @@ export default function SearchPdfTool() {
           {error}
         </p>
       )}
+
+      <ToolGateMessage code={actionCode} />
 
       {fullPdfUrl && (
         <div className="mt-6">

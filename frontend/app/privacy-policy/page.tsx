@@ -20,7 +20,7 @@ export default function PrivacyPolicyPage() {
           title: "Information We Process",
           body: [
             "When you upload a PDF, the file is sent to our server only so the selected tool can process it. We use the uploaded file to search text, add highlights, extract matching pages or convert the document, depending on the tool you choose.",
-            "We do not ask you to create an account, and we do not intentionally collect sensitive personal information. Your PDF may contain personal data if you choose to upload it, so you should only upload files you have the right to process.",
+            "You need an account to process PDF files. We do not intentionally collect sensitive personal information beyond what is needed for account access, file processing, abuse prevention and service operation. Your PDF may contain personal data if you choose to upload it, so you should only upload files you have the right to process.",
           ],
         },
         {
@@ -31,10 +31,10 @@ export default function PrivacyPolicyPage() {
           ],
         },
         {
-          title: "Accounts And Google Login",
+          title: "Accounts And Sign-In Providers",
           body: [
-            "If you choose to log in or register with Google, we may receive basic profile information such as your name, email address and profile image. This is used to create your account session and manage access to premium tools or API features.",
-            "Google login is optional. You can continue using free tools that do not require an account unless a feature specifically requires sign-in.",
+            "If you choose to log in or register with Google or GitHub, we may receive basic profile information such as your name, email address and profile image. If you use email sign-in, we process the email address and name you provide.",
+            "This information is used to create your account session, enforce free usage limits, detect repeated processing of the same PDF, and manage access to Premium tools or API features.",
           ],
         },
         {

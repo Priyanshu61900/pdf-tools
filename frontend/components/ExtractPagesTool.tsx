@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { API_URL } from "@/lib/api"
+import ToolGateMessage from "@/components/ToolGateMessage"
 
 export default function ExtractPagesTool() {
 
@@ -11,6 +11,7 @@ export default function ExtractPagesTool() {
   const [pdfUrl, setPdfUrl] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [actionCode, setActionCode] = useState("")
 
   const handle = async () => {
 
@@ -27,6 +28,7 @@ export default function ExtractPagesTool() {
     try {
       setLoading(true)
       setError("")
+      setActionCode("")
       setPdfUrl("")
 
       const form = new FormData()
@@ -35,7 +37,7 @@ export default function ExtractPagesTool() {
       form.append("search_text", text)
       form.append("highlight_color", color)
 
-      const res = await fetch(`${API_URL}/api/search-highlight`, {
+      const res = await fetch("/api/tools/search-highlight", {
         method: "POST",
         body: form,
       })
@@ -44,6 +46,7 @@ export default function ExtractPagesTool() {
 
       if (!data.success) {
         setError(data.error || "Backend error")
+        setActionCode(data.code || "")
         return
       }
 
@@ -99,6 +102,8 @@ export default function ExtractPagesTool() {
           {error}
         </p>
       )}
+
+      <ToolGateMessage code={actionCode} />
 
       {pdfUrl && (
         <div className="mt-6">

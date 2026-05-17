@@ -3,15 +3,15 @@ import Link from "next/link"
 import { absoluteUrl } from "@/lib/site"
 
 export const metadata = {
-  title: "Pricing - Free And Pro PDF Tools",
+  title: "Pricing - Free And Premium PDF Tools",
   description:
-    "Compare Free, Pro and API access plans for PDF search, highlighting, extraction, OCR, batch processing and developer API access.",
+    "Compare Free, Premium and API access plans for PDF search, highlighting, extraction, OCR, batch processing and developer API access.",
   keywords: [
     "PDF tools pricing",
     "PDF API pricing",
     "PDF OCR subscription",
     "PDF batch processing",
-    "PDF tools pro plan",
+    "PDF tools premium plan",
   ],
   alternates: {
     canonical: "/pricing",
@@ -21,13 +21,14 @@ export const metadata = {
 const plans = [
   {
     name: "Free",
-    price: "₹0",
+    price: "Rs. 0",
     period: "forever",
-    description: "For small PDFs and occasional document tasks.",
+    description: "For signed-in users processing small PDFs.",
     cta: "Start Free",
-    href: "/tools",
+    href: "/register",
     features: [
-      "Small PDF files",
+      "Free account required",
+      "Up to 5 pages per PDF",
       "Search PDF text",
       "Highlight matching text",
       "Extract matching pages",
@@ -35,14 +36,16 @@ const plans = [
     ],
   },
   {
-    name: "Pro",
-    price: "₹99",
-    period: "per month",
-    description: "For larger files, heavier usage and premium PDF features.",
-    cta: "Create Account",
+    name: "Premium",
+    price: "Rs. 99",
+    period: "one-time or monthly",
+    description:
+      "For larger files, repeated processing and premium PDF features.",
+    cta: "Upgrade",
     href: "/register",
     features: [
       "Larger PDF uploads",
+      "Process the same PDF again",
       "Batch processing",
       "OCR for scanned PDFs",
       "Watermark removal",
@@ -52,7 +55,7 @@ const plans = [
   },
   {
     name: "API Access",
-    price: "₹99",
+    price: "Rs. 99",
     period: "per month",
     description: "For developers who want PDF search and highlight APIs.",
     cta: "View API",
@@ -82,9 +85,9 @@ export default function PricingPage() {
             "@type": "Offer",
             name: plan.name,
             price:
-              plan.price === "₹0"
+              plan.price === "Rs. 0"
                 ? "0"
-                : plan.price.replace("₹", ""),
+                : plan.price.replace("Rs. ", ""),
             priceCurrency: "INR",
             url: absoluteUrl(plan.href),
           })),
@@ -97,9 +100,9 @@ export default function PricingPage() {
         </h1>
 
         <p className="text-zinc-400 leading-8 mt-6 max-w-3xl mx-auto">
-          Keep small PDF tasks free, then upgrade for larger files, batch
-          processing, OCR, watermark removal, unlimited usage and developer API
-          access.
+          Free accounts can process PDFs up to 5 pages. Premium unlocks larger
+          files, repeated processing, batch workflows, OCR, watermark removal
+          and developer API access.
         </p>
       </section>
 
@@ -136,10 +139,14 @@ export default function PricingPage() {
           ))}
         </div>
 
-        <p className="text-zinc-500 text-sm leading-7 mt-8">
-          Payment checkout is the next integration step. Connect Razorpay or
-          Stripe before enabling paid upgrades in production.
-        </p>
+        <section className="border border-zinc-800 bg-zinc-950 rounded-lg p-6 mt-8">
+          <h2 className="text-2xl font-bold">Payment Options</h2>
+          <p className="text-zinc-400 leading-8 mt-4">
+            Premium can be offered as a one-time Rs. 99 unlock or automatic
+            Rs. 99/month deductions for up to one year. Connect Razorpay or
+            Stripe before enabling real payments in production.
+          </p>
+        </section>
       </section>
     </main>
   )

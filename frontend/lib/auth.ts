@@ -7,8 +7,8 @@ export type UserSession = {
   email: string
   name: string
   picture?: string
-  provider: "google"
-  plan: "Free" | "Pro" | "API"
+  provider: "google" | "github" | "email"
+  plan: "Free" | "Premium" | "Pro" | "API"
 }
 
 function getAuthSecret() {
@@ -36,6 +36,10 @@ export function createSessionCookie(session: UserSession) {
   const signature = sign(payload)
 
   return `${payload}.${signature}`
+}
+
+export function createUserKey(session: UserSession) {
+  return sign(`user:${session.email.toLowerCase()}`)
 }
 
 export function verifySessionCookie(value?: string): UserSession | null {

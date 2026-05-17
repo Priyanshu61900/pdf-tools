@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 
-import { API_URL } from "@/lib/api"
+import ToolGateMessage from "@/components/ToolGateMessage"
 
 export default function HighlightPdfTool() {
 
@@ -18,6 +18,7 @@ export default function HighlightPdfTool() {
   const [loading, setLoading] = useState(false)
 
   const [error, setError] = useState("")
+  const [actionCode, setActionCode] = useState("")
 
   const handleSubmit = async () => {
 
@@ -36,6 +37,7 @@ export default function HighlightPdfTool() {
       setLoading(true)
 
       setError("")
+      setActionCode("")
 
       const formData = new FormData()
 
@@ -46,7 +48,7 @@ export default function HighlightPdfTool() {
       formData.append("highlight_color", color)
 
       const res = await fetch(
-        `${API_URL}/api/search-highlight`,
+        "/api/tools/search-highlight",
         {
           method: "POST",
           body: formData,
@@ -60,6 +62,7 @@ export default function HighlightPdfTool() {
       if (!data.success) {
 
         setError(data.error || "Backend error")
+        setActionCode(data.code || "")
 
         return
       }
@@ -132,6 +135,8 @@ export default function HighlightPdfTool() {
           {error}
         </p>
       )}
+
+      <ToolGateMessage code={actionCode} />
 
       {(fullPdfUrl || matchedPdfUrl) && (
         <div className="mt-6 flex flex-col gap-4">
