@@ -109,59 +109,89 @@ async def search_highlight(
 
         matched_pages = []
 
-        # -------------------------------------------------
-        # PROCESS PDF
-        # -------------------------------------------------
+        # =================================================
+        # PROCESS PDF (FIXED FAST VERSION)
+        # =================================================
 
         for page_num in range(len(pdf)):
 
             page = pdf[page_num]
 
-            words = page.get_text("words")
-
             found_on_page = False
 
-            for word in words:
+            # ---------------------------------------------
+            # FAST DIRECT SEARCH
+            # ---------------------------------------------
 
-                x0, y0, x1, y1, text, *_ = word
+            matches = page.search_for(search_text)
 
-                if search_text.lower() in text.lower():
+            # ---------------------------------------------
+            # FALLBACK PARTIAL + CASE INSENSITIVE SEARCH
+            # ---------------------------------------------
 
-                    found_on_page = True
+            if not matches:
 
-                    rect = fitz.Rect(x0, y0, x1, y1)
+                page_text = page.get_text("text").lower()
 
-                    annot = page.add_highlight_annot(rect)
+                terms = search_text.lower().split()
 
-                    annot.set_colors(stroke=selected_color)
+                if all(term in page_text for term in terms):
 
-                    annot.update()
+                    for term in terms:
+
+                        matches.extend(
+                            page.search_for(term)
+                        )
+
+            # ---------------------------------------------
+            # HIGHLIGHT
+            # ---------------------------------------------
+
+            for rect in matches:
+
+                found_on_page = True
+
+                annot = page.add_highlight_annot(rect)
+
+                annot.set_colors(
+                    stroke=selected_color
+                )
+
+                annot.set_opacity(0.5)
+
+                annot.update()
 
             if found_on_page:
+
                 matched_pages.append(page_num)
 
-        # -------------------------------------------------
+        # =================================================
         # SAVE FULL PDF
-        # -------------------------------------------------
+        # =================================================
 
         full_pdf_path = os.path.join(
             OUTPUT_DIR,
             f"full-{output_id}.pdf"
         )
 
-        pdf.save(full_pdf_path)
+        pdf.save(
+            full_pdf_path,
+            garbage=4,
+            deflate=True,
+            clean=True
+        )
 
         pdf.close()
 
-        # -------------------------------------------------
+        # =================================================
         # REOPEN SAVED PDF
-        # -------------------------------------------------
+        # =================================================
 
         saved_pdf = fitz.open(full_pdf_path)
 
-        # -------------------------------------------------
+        # =================================================
         # CREATE MATCHED PDF
-        # -------------------------------------------------
+        # =================================================
 
         matched_pdf = fitz.open()
 
@@ -178,15 +208,20 @@ async def search_highlight(
             f"matched-{output_id}.pdf"
         )
 
-        matched_pdf.save(matched_pdf_path)
+        matched_pdf.save(
+            matched_pdf_path,
+            garbage=4,
+            deflate=True,
+            clean=True
+        )
 
         matched_pdf.close()
 
         saved_pdf.close()
 
-        # -------------------------------------------------
+        # =================================================
         # RESPONSE
-        # -------------------------------------------------
+        # =================================================
 
         return {
             "success": True,
@@ -203,7 +238,10 @@ async def search_highlight(
 
     finally:
 
-        shutil.rmtree(temp_dir, ignore_errors=True)
+        shutil.rmtree(
+            temp_dir,
+            ignore_errors=True
+        )
 
 # =====================================================
 # DOWNLOAD FULL PDF
@@ -218,6 +256,7 @@ async def download_full_pdf(file_id: str):
     )
 
     if not os.path.exists(file_path):
+
         return {
             "success": False,
             "error": "File not found"
@@ -242,6 +281,7 @@ async def download_matched_pdf(file_id: str):
     )
 
     if not os.path.exists(file_path):
+
         return {
             "success": False,
             "error": "File not found"
