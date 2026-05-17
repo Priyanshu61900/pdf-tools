@@ -136,30 +136,33 @@ async def search_highlight(
 
                     for term in terms:
 
-                        matches.extend(
-                            page.search_for(term)
-                        )
+                        term_matches = page.search_for(term)
+
+                        if term_matches:
+                            matches.extend(term_matches)
 
             # ---------------------------------------------
-            # HIGHLIGHT
+            # HIGHLIGHT MATCHES
             # ---------------------------------------------
 
-            for rect in matches:
+            if matches:
 
                 found_on_page = True
 
-                annot = page.add_highlight_annot(rect)
+                for rect in matches:
 
-                annot.set_colors(
-                    stroke=selected_color
-                )
+                    annot = page.add_highlight_annot(rect)
 
-                annot.set_opacity(0.5)
+                    annot.set_colors(
+                        stroke=selected_color
+                    )
 
-                annot.update()
+                    annot.set_opacity(0.5)
+
+                    annot.update()
 
             # ---------------------------------------------
-            # SAVE MATCHED PAGE NUMBER
+            # STORE MATCHED PAGE
             # ---------------------------------------------
 
             if found_on_page:
@@ -185,25 +188,34 @@ async def search_highlight(
         pdf.close()
 
         # =================================================
-        # CREATE MATCHED PAGES PDF
+        # OPEN SAVED PDF
         # =================================================
 
         saved_pdf = fitz.open(full_pdf_path)
 
+        # =================================================
+        # CREATE MATCHED PAGES PDF
+        # =================================================
+
         matched_pdf = fitz.open()
 
-        # ONLY INSERT MATCHED PAGES
-        for page_num in matched_pages:
+        # IMPORTANT FIX:
+        # insert pages from SAVED PDF
+        # not original closed pdf
 
-            matched_pdf.insert_pdf(
-                saved_pdf,
-                from_page=page_num,
-                to_page=page_num
-            )
+        if matched_pages:
 
-        # IF NOTHING FOUND
-        if len(matched_pages) == 0:
+            for page_num in matched_pages:
 
+                matched_pdf.insert_pdf(
+                    saved_pdf,
+                    from_page=page_num,
+                    to_page=page_num
+                )
+
+        else:
+
+            # empty pdf page if no match
             matched_pdf.new_page()
 
         matched_pdf_path = os.path.join(
