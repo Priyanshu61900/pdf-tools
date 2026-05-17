@@ -1,40 +1,68 @@
+import JsonLd from "@/components/JsonLd"
 import Link from "next/link"
+import { guides } from "@/lib/guides"
+import { absoluteUrl, tools } from "@/lib/site"
 
 export const metadata = {
-  title: "Free PDF Tools Online - Search, Extract & Convert PDFs",
+  title: "Free PDF Tools Online - Search, Highlight, Extract & Convert",
   description:
-    "Use free online PDF tools to search text in PDFs, highlight matches, extract matching pages and convert PDF to Word instantly.",
+    "Free online PDF tools to search text in PDFs, highlight matches, extract matching pages and convert PDF files to Word documents.",
+  keywords: [
+    "free PDF tools online",
+    "PDF tools",
+    "search PDF text",
+    "highlight PDF",
+    "extract PDF pages",
+    "PDF to Word converter",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "Free PDF Tools Online",
+    description:
+      "Search PDF text, highlight matches, extract pages and convert PDFs to Word.",
+    url: absoluteUrl("/"),
+    type: "website",
+  },
 }
-
-const tools = [
-  {
-    title: "Search Text in PDF",
-    description: "Find names, numbers, keywords, emails, and more.",
-    href: "/search-text-in-pdf",
-  },
-
-  {
-    title: "Highlight PDF Text",
-    description: "Highlight matching text across the PDF.",
-    href: "/highlight-pdf",
-  },
-
-  {
-    title: "Extract Matching Pages",
-    description: "Download only pages containing searched text.",
-    href: "/extract-pages",
-  },
-
-  {
-    title: "PDF to Word",
-    description: "Convert PDFs into editable DOCX files.",
-    href: "/pdf-to-word",
-  },
-]
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-black text-white">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Free PDF Tools Online",
+          url: absoluteUrl("/"),
+          description:
+            "Free browser-based PDF tools for searching, highlighting, extracting matching pages and converting PDF documents.",
+        }}
+      />
+
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Free PDF Tools Online",
+          url: absoluteUrl("/"),
+        }}
+      />
+
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: "Free PDF Tools",
+          itemListElement: tools.map((tool, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            name: tool.title,
+            url: absoluteUrl(tool.href),
+          })),
+        }}
+      />
 
       {/* HERO */}
       <section className="border-b border-zinc-800 bg-gradient-to-b from-zinc-900 to-black">
@@ -46,23 +74,24 @@ export default function Home() {
           </h1>
 
           <p className="text-zinc-400 mt-6 text-xl max-w-3xl mx-auto">
-            Search, highlight, extract, and convert PDFs instantly.
+            Search PDF text, highlight matches, extract relevant pages,
+            and convert PDF files to Word documents from your browser.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4 mt-10">
 
             <Link
-              href="/search-text-in-pdf"
+              href="/tools"
               className="bg-white text-black px-8 py-4 rounded-2xl font-semibold"
             >
-              Start Searching PDFs
+              Browse PDF Tools
             </Link>
 
             <Link
-              href="/pdf-to-word"
+              href="/guides"
               className="border border-zinc-700 px-8 py-4 rounded-2xl"
             >
-              Convert PDFs
+              Read PDF Guides
             </Link>
 
           </div>
@@ -96,50 +125,72 @@ export default function Home() {
 
       </section>
 
+      <section className="max-w-7xl mx-auto px-6 pb-20">
+        <h2 className="text-4xl font-bold mb-8">
+          PDF Guides And Tutorials
+        </h2>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          {guides.map((guide) => (
+            <Link
+              key={guide.slug}
+              href={`/guides/${guide.slug}`}
+              className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 hover:border-zinc-600 transition"
+            >
+              <h3 className="text-2xl font-bold">
+                {guide.title}
+              </h3>
+
+              <p className="text-zinc-400 leading-8 mt-4">
+                {guide.description}
+              </p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       {/* SEO CONTENT */}
       <section className="max-w-5xl mx-auto px-6 pb-20">
 
         <h2 className="text-4xl font-bold mb-8">
-          Free Online PDF Tools
+          Practical PDF Tools For Everyday Documents
         </h2>
 
         <p className="text-zinc-400 leading-8 mb-6">
-          Use our free PDF tools to search text inside PDF files,
-          highlight matching content, extract pages containing
-          keywords and convert PDF documents into editable Word files.
+          Free PDF Tools Online is built for quick document tasks that
+          people handle every day: finding text in long PDFs, marking
+          important phrases, pulling out only relevant pages, and converting
+          PDF files into editable Word documents.
         </p>
 
         <p className="text-zinc-400 leading-8 mb-6">
-          All tools work online without installation and support
-          fast PDF processing directly in your browser.
+          The tools are designed for reports, forms, invoices, notes,
+          contracts, manuals and other documents where speed matters.
+          Each tool has a focused workflow so you can upload a file, choose
+          the action you need, and download the result.
         </p>
 
-      </section>
+        <h2 className="text-3xl font-bold mt-12 mb-6">
+          Why Use These PDF Tools?
+        </h2>
 
-      {/* FOOTER */}
-      <footer className="border-t border-zinc-800 mt-20 py-10">
-
-        <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-4 gap-6 text-center">
-
-          <Link href="/search-text-in-pdf">
-            Search Text in PDF
-          </Link>
-
-          <Link href="/highlight-pdf">
-            Highlight PDF Text
-          </Link>
-
-          <Link href="/extract-pages">
-            Extract Matching Pages
-          </Link>
-
-          <Link href="/pdf-to-word">
-            PDF to Word
-          </Link>
-
+        <div className="grid md:grid-cols-2 gap-4">
+          {[
+            "No account is required for the core tools.",
+            "Each tool has a simple single-purpose workflow.",
+            "Search and highlight tools create downloadable PDF results.",
+            "Policy, contact and privacy pages are available for transparency.",
+          ].map((item) => (
+            <p
+              key={item}
+              className="border border-zinc-800 bg-zinc-950 rounded-lg p-5 text-zinc-300 leading-7"
+            >
+              {item}
+            </p>
+          ))}
         </div>
 
-      </footer>
+      </section>
 
     </main>
   )

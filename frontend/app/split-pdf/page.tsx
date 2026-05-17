@@ -1,4 +1,10 @@
-"use client"
+export const metadata = {
+  title: "Split PDF",
+  robots: {
+    index: false,
+    follow: true,
+  },
+}
 
 export default function Page() {
   return (
