@@ -16,15 +16,9 @@ type GoogleUserInfo = {
   picture?: string
 }
 
-function getConfiguredSiteOrigin() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-
-  if (!siteUrl) {
-    return null
-  }
-
-  return new URL(siteUrl).origin
-}
+const GOOGLE_SITE_ORIGIN =
+  "https://pdf-tools-8i25dqrmt-priyanshu61900s-projects.vercel.app"
+const GOOGLE_REDIRECT_URI = `${GOOGLE_SITE_ORIGIN}/api/auth/google/callback`
 
 function redirectWithError(request: Request, error: string) {
   return NextResponse.redirect(new URL(`/login?error=${error}`, request.url))
@@ -46,11 +40,6 @@ export async function GET(request: Request) {
     return redirectWithError(request, "google_not_configured")
   }
 
-  const redirectUri = new URL(
-    "/api/auth/google/callback",
-    getConfiguredSiteOrigin() || url.origin
-  ).toString()
-
   const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: {
@@ -61,7 +50,7 @@ export async function GET(request: Request) {
       client_secret: clientSecret,
       code,
       grant_type: "authorization_code",
-      redirect_uri: redirectUri,
+      redirect_uri: GOOGLE_REDIRECT_URI,
     }),
   })
 
@@ -91,7 +80,7 @@ export async function GET(request: Request) {
     plan: "Free",
   }
 
-  const response = NextResponse.redirect(new URL("/account", request.url))
+  const response = NextResponse.redirect(new URL("/account", GOOGLE_SITE_ORIGIN))
 
   response.cookies.set(sessionCookieName, createSessionCookie(session), {
     httpOnly: true,
