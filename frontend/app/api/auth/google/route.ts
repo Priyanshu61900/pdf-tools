@@ -1,6 +1,14 @@
-import { randomBytes } from "crypto"
 import { NextResponse } from "next/server"
-import { authStateCookieName } from "@/lib/auth"
+
+function getConfiguredSiteOrigin() {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+
+  if (!siteUrl) {
+    return null
+  }
+
+  return new URL(siteUrl).origin
+}
 
 export function GET(request: Request) {
   const clientId = process.env.GOOGLE_CLIENT_ID
@@ -11,10 +19,17 @@ export function GET(request: Request) {
     )
   }
 
-  const state = randomBytes(24).toString("base64url")
+  const requestUrl = new URL(request.url)
+  const configuredOrigin = getConfiguredSiteOrigin()
+
+  if (configuredOrigin && requestUrl.origin !== configuredOrigin) {
+    return NextResponse.redirect(new URL("/api/auth/google", configuredOrigin))
+  }
+
+  const redirectOrigin = configuredOrigin || requestUrl.origin
   const redirectUri = new URL(
     "/api/auth/google/callback",
-    process.env.NEXT_PUBLIC_SITE_URL || request.url
+    redirectOrigin
   ).toString()
 
   const params = new URLSearchParams({
@@ -22,21 +37,10 @@ export function GET(request: Request) {
     redirect_uri: redirectUri,
     response_type: "code",
     scope: "openid email profile",
-    state,
     prompt: "select_account",
   })
 
-  const response = NextResponse.redirect(
+  return NextResponse.redirect(
     `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
   )
-
-  response.cookies.set(authStateCookieName, state, {
-    httpOnly: true,
-    maxAge: 60 * 10,
-    path: "/",
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-  })
-
-  return response
 }

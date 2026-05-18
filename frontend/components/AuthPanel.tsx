@@ -13,7 +13,7 @@ const errorMessages: Record<string, string> = {
     "Google login is not configured yet. Add Google OAuth environment variables in Vercel.",
   github_not_configured:
     "GitHub login is not configured yet. Add GitHub OAuth environment variables in Vercel.",
-  invalid_google_state: "Google login expired. Please try again.",
+  invalid_google_state: "Google sign in could not be completed. Please start again from the Google button.",
   invalid_github_state: "GitHub login expired. Please try again.",
   google_login_failed: "Google login failed. Please try again.",
   github_login_failed: "GitHub login failed. Please try again.",

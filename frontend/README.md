@@ -20,6 +20,32 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Google Sign-In On Vercel
+
+The existing **Continue With Google** button uses Google OAuth through the Next.js routes in `app/api/auth/google`.
+
+Add these environment variables in Vercel:
+
+```text
+NEXT_PUBLIC_SITE_URL=https://pdf-tools-8i25dqrmt-priyanshu61900s-projects.vercel.app
+AUTH_SECRET=choose-a-long-random-secret
+GOOGLE_CLIENT_ID=your-google-oauth-client-id
+GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
+BACKEND_APP_SECRET=the-same-secret-set-on-render
+```
+
+In your Google OAuth web client settings, add this authorized redirect URI:
+
+```text
+https://pdf-tools-8i25dqrmt-priyanshu61900s-projects.vercel.app/api/auth/google/callback
+```
+
+In Render, keep the FastAPI backend deployed and set:
+
+```text
+PDF_TOOLS_APP_SECRET=the-same-secret-used-for-BACKEND_APP_SECRET
+```
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

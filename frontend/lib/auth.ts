@@ -31,6 +31,16 @@ function sign(value: string) {
   return createHmac("sha256", getAuthSecret()).update(value).digest("base64url")
 }
 
+function signaturesMatch(signature: string, expectedSignature: string) {
+  const signatureBuffer = Buffer.from(signature)
+  const expectedBuffer = Buffer.from(expectedSignature)
+
+  return (
+    signatureBuffer.length === expectedBuffer.length &&
+    timingSafeEqual(signatureBuffer, expectedBuffer)
+  )
+}
+
 export function createSessionCookie(session: UserSession) {
   const payload = base64UrlEncode(JSON.stringify(session))
   const signature = sign(payload)
@@ -54,13 +64,8 @@ export function verifySessionCookie(value?: string): UserSession | null {
   }
 
   const expectedSignature = sign(payload)
-  const signatureBuffer = Buffer.from(signature)
-  const expectedBuffer = Buffer.from(expectedSignature)
 
-  if (
-    signatureBuffer.length !== expectedBuffer.length ||
-    !timingSafeEqual(signatureBuffer, expectedBuffer)
-  ) {
+  if (!signaturesMatch(signature, expectedSignature)) {
     return null
   }
 

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import {
-  authStateCookieName,
   createSessionCookie,
   sessionCookieName,
   type UserSession,
@@ -17,6 +16,16 @@ type GoogleUserInfo = {
   picture?: string
 }
 
+function getConfiguredSiteOrigin() {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+
+  if (!siteUrl) {
+    return null
+  }
+
+  return new URL(siteUrl).origin
+}
+
 function redirectWithError(request: Request, error: string) {
   return NextResponse.redirect(new URL(`/login?error=${error}`, request.url))
 }
@@ -24,16 +33,10 @@ function redirectWithError(request: Request, error: string) {
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const code = url.searchParams.get("code")
-  const state = url.searchParams.get("state")
-  const storedState = request.headers
-    .get("cookie")
-    ?.split(";")
-    .map((cookie) => cookie.trim())
-    .find((cookie) => cookie.startsWith(`${authStateCookieName}=`))
-    ?.split("=")[1]
+  const error = url.searchParams.get("error")
 
-  if (!code || !state || !storedState || state !== storedState) {
-    return redirectWithError(request, "invalid_google_state")
+  if (error || !code) {
+    return redirectWithError(request, error || "google_login_failed")
   }
 
   const clientId = process.env.GOOGLE_CLIENT_ID
@@ -45,7 +48,7 @@ export async function GET(request: Request) {
 
   const redirectUri = new URL(
     "/api/auth/google/callback",
-    process.env.NEXT_PUBLIC_SITE_URL || request.url
+    getConfiguredSiteOrigin() || url.origin
   ).toString()
 
   const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
@@ -97,11 +100,5 @@ export async function GET(request: Request) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
   })
-
-  response.cookies.set(authStateCookieName, "", {
-    maxAge: 0,
-    path: "/",
-  })
-
   return response
 }
