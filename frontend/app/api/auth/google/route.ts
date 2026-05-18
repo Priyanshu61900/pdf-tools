@@ -1,24 +1,27 @@
 import { NextResponse } from "next/server"
 
-const GOOGLE_CALLBACK_PATH = "/api/auth/google/callback"
-
 function getGoogleRedirectUri(request: Request) {
-  return (
-    process.env.GOOGLE_REDIRECT_URI ||
-    new URL(GOOGLE_CALLBACK_PATH, request.url).toString()
-  )
+  if (process.env.GOOGLE_REDIRECT_URI) {
+    return process.env.GOOGLE_REDIRECT_URI
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    return new URL("/api/auth/google/callback", request.url).toString()
+  }
+
+  return null
 }
 
 export function GET(request: Request) {
   const clientId = process.env.GOOGLE_CLIENT_ID
 
-  if (!clientId) {
+  const redirectUri = getGoogleRedirectUri(request)
+
+  if (!clientId || !redirectUri) {
     return NextResponse.redirect(
       new URL("/login?error=google_not_configured", request.url)
     )
   }
-
-  const redirectUri = getGoogleRedirectUri(request)
 
   const params = new URLSearchParams({
     client_id: clientId,

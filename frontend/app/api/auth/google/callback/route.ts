@@ -16,13 +16,16 @@ type GoogleUserInfo = {
   picture?: string
 }
 
-const GOOGLE_CALLBACK_PATH = "/api/auth/google/callback"
-
 function getGoogleRedirectUri(request: Request) {
-  return (
-    process.env.GOOGLE_REDIRECT_URI ||
-    new URL(GOOGLE_CALLBACK_PATH, request.url).toString()
-  )
+  if (process.env.GOOGLE_REDIRECT_URI) {
+    return process.env.GOOGLE_REDIRECT_URI
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    return new URL("/api/auth/google/callback", request.url).toString()
+  }
+
+  return null
 }
 
 function redirectWithError(request: Request, error: string) {
@@ -41,11 +44,11 @@ export async function GET(request: Request) {
   const clientId = process.env.GOOGLE_CLIENT_ID
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET
 
-  if (!clientId || !clientSecret) {
+  const redirectUri = getGoogleRedirectUri(request)
+
+  if (!clientId || !clientSecret || !redirectUri) {
     return redirectWithError(request, "google_not_configured")
   }
-
-  const redirectUri = getGoogleRedirectUri(request)
 
   const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",

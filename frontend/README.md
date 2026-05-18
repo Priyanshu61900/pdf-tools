@@ -41,8 +41,10 @@ In your Google OAuth web client settings, add this authorized redirect URI:
 https://your-stable-vercel-domain.vercel.app/api/auth/google/callback
 ```
 
-Use your stable production Vercel domain or custom domain, not a random
-deployment URL with a hash in it.
+Use the stable project domain from **Vercel > Project > Settings > Domains**
+or a custom domain. Do not use deployment URLs with random hashes such as
+`pdf-tools-btvnpb2sc-...vercel.app`; those change every deployment and Google
+will reject them.
 
 In Render, keep the FastAPI backend deployed and set:
 
