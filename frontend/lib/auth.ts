@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "crypto"
 
 export const authStateCookieName = "pdf_tools_auth_state"
 export const sessionCookieName = "pdf_tools_session"
+export const emailAccountCookieName = "pdf_tools_email_account"
 
 export type UserSession = {
   email: string
@@ -9,6 +10,15 @@ export type UserSession = {
   picture?: string
   provider: "google" | "github" | "email"
   plan: "Free" | "Premium" | "Pro" | "API"
+}
+
+export type EmailAccount = {
+  email: string
+  name: string
+  passwordHash: string
+  salt: string
+  verified: true
+  plan: UserSession["plan"]
 }
 
 function getAuthSecret() {
@@ -48,11 +58,26 @@ export function createSessionCookie(session: UserSession) {
   return `${payload}.${signature}`
 }
 
+export function createSignedValue(value: unknown) {
+  const payload = base64UrlEncode(JSON.stringify(value))
+  const signature = sign(payload)
+
+  return `${payload}.${signature}`
+}
+
 export function createUserKey(session: UserSession) {
   return sign(`user:${session.email.toLowerCase()}`)
 }
 
 export function verifySessionCookie(value?: string): UserSession | null {
+  return verifySignedValue<UserSession>(value)
+}
+
+export function verifyEmailAccountCookie(value?: string): EmailAccount | null {
+  return verifySignedValue<EmailAccount>(value)
+}
+
+export function verifySignedValue<T>(value?: string): T | null {
   if (!value) {
     return null
   }
@@ -70,7 +95,7 @@ export function verifySessionCookie(value?: string): UserSession | null {
   }
 
   try {
-    return JSON.parse(base64UrlDecode(payload)) as UserSession
+    return JSON.parse(base64UrlDecode(payload)) as T
   } catch {
     return null
   }

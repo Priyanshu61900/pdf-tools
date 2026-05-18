@@ -11,25 +11,22 @@ type AuthPanelProps = {
 const errorMessages: Record<string, string> = {
   google_not_configured:
     "Google login is not configured yet. Add Google OAuth environment variables in Vercel.",
-  github_not_configured:
-    "GitHub login is not configured yet. Add GitHub OAuth environment variables in Vercel.",
   invalid_google_state: "Google sign in could not be completed. Please start again from the Google button.",
-  invalid_github_state: "GitHub login expired. Please try again.",
   google_login_failed: "Google login failed. Please try again.",
-  github_login_failed: "GitHub login failed. Please try again.",
   google_profile_failed:
     "We could not read your Google profile. Please try again.",
-  github_profile_failed:
-    "We could not read your GitHub profile. Please try again.",
-  github_email_missing:
-    "Your GitHub account did not return a verified email address.",
+  email_confirmation_failed:
+    "That email confirmation link is invalid. Please create your account again.",
 }
 
 export default function AuthPanel({ mode = "register", error }: AuthPanelProps) {
   const router = useRouter()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [emailError, setEmailError] = useState("")
+  const [emailMessage, setEmailMessage] = useState("")
+  const [confirmationUrl, setConfirmationUrl] = useState("")
   const [loading, setLoading] = useState(false)
 
   const submitEmail = async (event: FormEvent<HTMLFormElement>) => {
@@ -38,6 +35,8 @@ export default function AuthPanel({ mode = "register", error }: AuthPanelProps) 
     try {
       setLoading(true)
       setEmailError("")
+      setEmailMessage("")
+      setConfirmationUrl("")
 
       const response = await fetch("/api/auth/email", {
         method: "POST",
@@ -45,8 +44,10 @@ export default function AuthPanel({ mode = "register", error }: AuthPanelProps) 
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          action: mode,
           name,
           email,
+          password,
         }),
       })
 
@@ -54,6 +55,12 @@ export default function AuthPanel({ mode = "register", error }: AuthPanelProps) 
 
       if (!data.success) {
         setEmailError(data.error || "Email sign in failed.")
+        return
+      }
+
+      if (data.needsConfirmation) {
+        setEmailMessage(data.message || "Check your email to confirm your account.")
+        setConfirmationUrl(data.confirmationUrl || "")
         return
       }
 
@@ -67,15 +74,16 @@ export default function AuthPanel({ mode = "register", error }: AuthPanelProps) 
   }
 
   const title = mode === "login" ? "Log In" : "Create Your Free Account"
-  const submitLabel = mode === "login" ? "Continue With Email" : "Sign Up With Email"
+  const submitLabel = mode === "login" ? "Log In With Email" : "Create Email Account"
 
   return (
-    <div className="w-full max-w-md border border-zinc-800 bg-zinc-950 rounded-lg p-6">
+    <div className="animate-rise w-full max-w-md border border-zinc-800 bg-zinc-950/90 rounded-lg p-6 shadow-2xl shadow-black/30">
       <h2 className="text-3xl font-bold">{title}</h2>
 
       <p className="text-zinc-400 leading-7 mt-3">
-        Sign up to use the PDF tools. Free accounts can process PDFs up to 5
-        pages, and Premium unlocks larger files for Rs. 99.
+        {mode === "login"
+          ? "Log in with Google or your confirmed email account."
+          : "Create a free account with Google or email. Free accounts can process PDFs up to 5 pages."}
       </p>
 
       {error && (
@@ -87,16 +95,9 @@ export default function AuthPanel({ mode = "register", error }: AuthPanelProps) 
       <div className="grid gap-3 mt-6">
         <a
           href="/api/auth/google"
-          className="block bg-white text-black text-center font-semibold rounded-lg px-5 py-3"
+          className="block bg-white text-black text-center font-semibold rounded-lg px-5 py-3 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-white/10"
         >
           Continue With Google
-        </a>
-
-        <a
-          href="/api/auth/github"
-          className="block border border-zinc-700 text-center font-semibold rounded-lg px-5 py-3"
-        >
-          Continue With GitHub
         </a>
       </div>
 
@@ -107,15 +108,17 @@ export default function AuthPanel({ mode = "register", error }: AuthPanelProps) 
       </div>
 
       <form onSubmit={submitEmail} className="grid gap-3">
-        <input
-          className="w-full p-3 rounded-lg bg-zinc-900 border border-zinc-800 text-white"
-          placeholder="Name"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-        />
+        {mode === "register" && (
+          <input
+            className="w-full p-3 rounded-lg bg-zinc-900 border border-zinc-800 text-white transition focus:border-zinc-500 focus:outline-none"
+            placeholder="Name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+        )}
 
         <input
-          className="w-full p-3 rounded-lg bg-zinc-900 border border-zinc-800 text-white"
+          className="w-full p-3 rounded-lg bg-zinc-900 border border-zinc-800 text-white transition focus:border-zinc-500 focus:outline-none"
           placeholder="Email address"
           type="email"
           value={email}
@@ -123,13 +126,37 @@ export default function AuthPanel({ mode = "register", error }: AuthPanelProps) 
           required
         />
 
+        <input
+          className="w-full p-3 rounded-lg bg-zinc-900 border border-zinc-800 text-white transition focus:border-zinc-500 focus:outline-none"
+          placeholder="Password"
+          type="password"
+          value={password}
+          minLength={8}
+          onChange={(event) => setPassword(event.target.value)}
+          required
+        />
+
         <button
           disabled={loading}
-          className="w-full bg-white text-black rounded-lg p-3 font-semibold"
+          className="w-full bg-white text-black rounded-lg p-3 font-semibold transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {loading ? "Signing in..." : submitLabel}
+          {loading ? "Please wait..." : submitLabel}
         </button>
       </form>
+
+      {emailMessage && (
+        <div className="border border-emerald-900 bg-emerald-950 text-emerald-100 rounded-lg p-4 mt-4">
+          <p>{emailMessage}</p>
+          {confirmationUrl && (
+            <a
+              href={confirmationUrl}
+              className="inline-block text-sm underline mt-3"
+            >
+              Confirm account now
+            </a>
+          )}
+        </div>
+      )}
 
       {emailError && (
         <p className="text-red-400 text-sm mt-4">

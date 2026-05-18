@@ -33,7 +33,7 @@ export default function PrivacyPolicyPage() {
         {
           title: "Accounts And Sign-In Providers",
           body: [
-            "If you choose to log in or register with Google or GitHub, we may receive basic profile information such as your name, email address and profile image. If you use email sign-in, we process the email address and name you provide.",
+            "If you choose to log in or register with Google, we may receive basic profile information such as your name, email address and profile image. If you use email sign-in, we process the email address, name and password confirmation details you provide.",
             "This information is used to create your account session, enforce free usage limits, detect repeated processing of the same PDF, and manage access to Premium tools or API features.",
           ],
         },

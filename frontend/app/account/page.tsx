@@ -42,13 +42,21 @@ export default async function AccountPage() {
 
   return (
     <main className="min-h-screen bg-black text-white">
-      <section className="max-w-5xl mx-auto px-6 py-16">
+      <section className="animate-rise max-w-5xl mx-auto px-6 py-16">
         <h1 className="text-4xl md:text-5xl font-bold">
-          Account
+          Welcome, {session.name}
         </h1>
+        <p className="text-zinc-400 leading-8 mt-4">
+          You are signed in with{" "}
+          {session.provider === "google"
+            ? "Google"
+            : session.provider === "github"
+              ? "GitHub"
+              : "email"}.
+        </p>
 
         <div className="grid md:grid-cols-2 gap-6 mt-10">
-          <div className="border border-zinc-800 bg-zinc-950 rounded-lg p-6">
+          <div className="hover-lift border border-zinc-800 bg-zinc-950/90 rounded-lg p-6">
             <h2 className="text-2xl font-bold">Profile</h2>
             <p className="text-zinc-400 leading-8 mt-4">
               {session.name}
@@ -58,21 +66,21 @@ export default async function AccountPage() {
             </p>
           </div>
 
-          <div className="border border-zinc-800 bg-zinc-950 rounded-lg p-6">
+          <div className="hover-lift border border-zinc-800 bg-zinc-950/90 rounded-lg p-6">
             <h2 className="text-2xl font-bold">Current Plan</h2>
             <p className="text-zinc-400 leading-8 mt-4">
               {session.plan}
             </p>
             <Link
               href="/pricing"
-              className="inline-block bg-white text-black font-semibold rounded-lg px-5 py-3 mt-5"
+              className="inline-block bg-white text-black font-semibold rounded-lg px-5 py-3 mt-5 transition hover:-translate-y-0.5"
             >
               View Plans
             </Link>
           </div>
         </div>
 
-        <section className="border border-zinc-800 bg-zinc-950 rounded-lg p-6 mt-6">
+        <section className="hover-lift border border-zinc-800 bg-zinc-950/90 rounded-lg p-6 mt-6">
           <h2 className="text-2xl font-bold">API Access</h2>
           <p className="text-zinc-400 leading-8 mt-4">
             API keys and billing controls will be available after the paid API
@@ -80,7 +88,7 @@ export default async function AccountPage() {
           </p>
           <Link
             href="/api-access"
-            className="inline-block border border-zinc-700 rounded-lg px-5 py-3 mt-5"
+            className="inline-block border border-zinc-700 rounded-lg px-5 py-3 mt-5 transition hover:-translate-y-0.5 hover:border-zinc-500"
           >
             View API Access
           </Link>

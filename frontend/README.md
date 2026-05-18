@@ -20,7 +20,7 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Google Sign-In On Vercel
+## Sign-In On Vercel
 
 The existing **Continue With Google** button uses Google OAuth through the Next.js routes in `app/api/auth/google`.
 
@@ -33,6 +33,8 @@ AUTH_SECRET=choose-a-long-random-secret
 GOOGLE_CLIENT_ID=your-google-oauth-client-id
 GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
 BACKEND_APP_SECRET=the-same-secret-set-on-render
+RESEND_API_KEY=your-resend-api-key-for-email-confirmation
+AUTH_EMAIL_FROM=Free PDF Tools Online <accounts@your-domain.com>
 ```
 
 In your Google OAuth web client settings, add this authorized redirect URI:
@@ -51,6 +53,11 @@ In Render, keep the FastAPI backend deployed and set:
 ```text
 PDF_TOOLS_APP_SECRET=the-same-secret-used-for-BACKEND_APP_SECRET
 ```
+
+Email/password registration uses `/api/auth/email` and sends confirmation
+links through Resend when `RESEND_API_KEY` and `AUTH_EMAIL_FROM` are set. If
+those variables are missing, the UI shows a local confirmation link so the flow
+can still be tested before email delivery is connected.
 
 ## Learn More
 

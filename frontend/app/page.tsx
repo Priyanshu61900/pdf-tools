@@ -70,7 +70,7 @@ export default function Home() {
 
         <div className="max-w-7xl mx-auto px-6 py-16 grid gap-10 lg:grid-cols-[1fr_420px] lg:items-center">
 
-          <div>
+          <div className="animate-rise">
             <h1 className="text-5xl md:text-6xl font-bold leading-tight">
               Free PDF Tools Online
             </h1>
@@ -85,14 +85,14 @@ export default function Home() {
 
               <Link
                 href="/tools"
-                className="bg-white text-black px-8 py-4 rounded-2xl font-semibold"
+              className="bg-white text-black px-8 py-4 rounded-2xl font-semibold transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-white/10"
               >
                 Browse PDF Tools
               </Link>
 
               <Link
                 href="/pricing"
-                className="border border-zinc-700 px-8 py-4 rounded-2xl"
+              className="border border-zinc-700 px-8 py-4 rounded-2xl transition hover:-translate-y-0.5 hover:border-zinc-500"
               >
                 Premium Plans
               </Link>
@@ -115,7 +115,7 @@ export default function Home() {
             <Link
               key={tool.title}
               href={tool.href}
-              className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 hover:border-zinc-600 transition"
+              className="hover-lift bg-zinc-900/90 border border-zinc-800 rounded-3xl p-6"
             >
               <h2 className="text-2xl font-bold mb-3">
                 {tool.title}
@@ -141,7 +141,7 @@ export default function Home() {
             <Link
               key={guide.slug}
               href={`/guides/${guide.slug}`}
-              className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 hover:border-zinc-600 transition"
+              className="hover-lift bg-zinc-900/90 border border-zinc-800 rounded-lg p-6"
             >
               <h3 className="text-2xl font-bold">
                 {guide.title}
@@ -169,13 +169,13 @@ export default function Home() {
         <div className="flex flex-wrap gap-4">
           <Link
             href="/pricing"
-            className="bg-white text-black px-6 py-3 rounded-lg font-semibold"
+            className="bg-white text-black px-6 py-3 rounded-lg font-semibold transition hover:-translate-y-0.5"
           >
             View Pricing
           </Link>
           <Link
             href="/api-access"
-            className="border border-zinc-700 px-6 py-3 rounded-lg"
+            className="border border-zinc-700 px-6 py-3 rounded-lg transition hover:-translate-y-0.5 hover:border-zinc-500"
           >
             PDF API Access
           </Link>
@@ -216,7 +216,7 @@ export default function Home() {
           ].map((item) => (
             <p
               key={item}
-              className="border border-zinc-800 bg-zinc-950 rounded-lg p-5 text-zinc-300 leading-7"
+              className="hover-lift border border-zinc-800 bg-zinc-950/90 rounded-lg p-5 text-zinc-300 leading-7"
             >
               {item}
             </p>
