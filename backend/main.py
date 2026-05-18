@@ -75,6 +75,24 @@ def is_trusted_app_request(x_app_secret: Optional[str] = None):
 
     return bool(x_app_secret and x_app_secret == configured_secret)
 
+def normalize_search_text(value: str):
+    return re.sub(r"\s+", " ", value.strip().lower())
+
+def page_contains_all_terms(page_text: str, search_text: str):
+    normalized_page_text = normalize_search_text(page_text)
+    normalized_search_text = normalize_search_text(search_text)
+
+    if not normalized_search_text:
+        return False
+
+    if normalized_search_text in normalized_page_text:
+        return True
+
+    return all(
+        term in normalized_page_text
+        for term in normalized_search_text.split()
+    )
+
 def is_premium_request(
     user_plan: Optional[str] = None,
     authorization: Optional[str] = None,
@@ -401,11 +419,11 @@ async def search_highlight(
 
             if not matches:
 
-                page_text = page.get_text("text").lower()
+                page_text = page.get_text("text")
 
-                terms = search_text.lower().split()
+                terms = normalize_search_text(search_text).split()
 
-                if all(term in page_text for term in terms):
+                if page_contains_all_terms(page_text, search_text):
 
                     for term in terms:
 
@@ -488,8 +506,17 @@ async def search_highlight(
 
         else:
 
-            # empty pdf page if no match
-            matched_pdf.new_page()
+            saved_pdf.close()
+            matched_pdf.close()
+
+            return {
+                "success": False,
+                "code": "no_matches",
+                "error": (
+                    "No pages contained that text. Check the spelling or try a "
+                    "shorter keyword. Scanned PDFs need OCR before text can be found."
+                )
+            }
 
         matched_pdf_path = os.path.join(
             OUTPUT_DIR,

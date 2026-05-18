@@ -1,4 +1,3 @@
-import AuthPanel from "@/components/AuthPanel"
 import JsonLd from "@/components/JsonLd"
 import Link from "next/link"
 import { guides } from "@/lib/guides"
@@ -68,9 +67,9 @@ export default function Home() {
       {/* HERO */}
       <section className="border-b border-zinc-800 bg-gradient-to-b from-zinc-900 to-black">
 
-        <div className="max-w-7xl mx-auto px-6 py-16 grid gap-10 lg:grid-cols-[1fr_420px] lg:items-center">
+        <div className="max-w-7xl mx-auto px-6 py-16">
 
-          <div className="animate-rise">
+          <div className="animate-rise max-w-4xl">
             <h1 className="text-5xl md:text-6xl font-bold leading-tight">
               Free PDF Tools Online
             </h1>
@@ -91,16 +90,14 @@ export default function Home() {
               </Link>
 
               <Link
-                href="/pricing"
-              className="border border-zinc-700 px-8 py-4 rounded-2xl transition hover:-translate-y-0.5 hover:border-zinc-500"
+                href="/login"
+                className="border border-zinc-700 px-8 py-4 rounded-2xl transition hover:-translate-y-0.5 hover:border-zinc-500"
               >
-                Premium Plans
+                Sign In
               </Link>
 
             </div>
           </div>
-
-          <AuthPanel mode="register" />
 
         </div>
 
