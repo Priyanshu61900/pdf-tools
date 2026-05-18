@@ -27,7 +27,8 @@ The existing **Continue With Google** button uses Google OAuth through the Next.
 Add these environment variables in Vercel:
 
 ```text
-NEXT_PUBLIC_SITE_URL=https://pdf-tools-8i25dqrmt-priyanshu61900s-projects.vercel.app
+NEXT_PUBLIC_SITE_URL=https://your-stable-vercel-domain.vercel.app
+GOOGLE_REDIRECT_URI=https://your-stable-vercel-domain.vercel.app/api/auth/google/callback
 AUTH_SECRET=choose-a-long-random-secret
 GOOGLE_CLIENT_ID=your-google-oauth-client-id
 GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
@@ -37,8 +38,11 @@ BACKEND_APP_SECRET=the-same-secret-set-on-render
 In your Google OAuth web client settings, add this authorized redirect URI:
 
 ```text
-https://pdf-tools-8i25dqrmt-priyanshu61900s-projects.vercel.app/api/auth/google/callback
+https://your-stable-vercel-domain.vercel.app/api/auth/google/callback
 ```
+
+Use your stable production Vercel domain or custom domain, not a random
+deployment URL with a hash in it.
 
 In Render, keep the FastAPI backend deployed and set:
 

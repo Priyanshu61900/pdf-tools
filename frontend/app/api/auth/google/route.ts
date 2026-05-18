@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server"
 
-const GOOGLE_SITE_ORIGIN =
-  "https://pdf-tools-8i25dqrmt-priyanshu61900s-projects.vercel.app"
-const GOOGLE_REDIRECT_URI = `${GOOGLE_SITE_ORIGIN}/api/auth/google/callback`
+const GOOGLE_CALLBACK_PATH = "/api/auth/google/callback"
+
+function getGoogleRedirectUri(request: Request) {
+  return (
+    process.env.GOOGLE_REDIRECT_URI ||
+    new URL(GOOGLE_CALLBACK_PATH, request.url).toString()
+  )
+}
 
 export function GET(request: Request) {
   const clientId = process.env.GOOGLE_CLIENT_ID
@@ -13,15 +18,11 @@ export function GET(request: Request) {
     )
   }
 
-  const requestUrl = new URL(request.url)
-
-  if (requestUrl.origin !== GOOGLE_SITE_ORIGIN) {
-    return NextResponse.redirect(new URL("/api/auth/google", GOOGLE_SITE_ORIGIN))
-  }
+  const redirectUri = getGoogleRedirectUri(request)
 
   const params = new URLSearchParams({
     client_id: clientId,
-    redirect_uri: GOOGLE_REDIRECT_URI,
+    redirect_uri: redirectUri,
     response_type: "code",
     scope: "openid email profile",
     prompt: "select_account",
