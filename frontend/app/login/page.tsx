@@ -7,7 +7,7 @@ import { redirect } from "next/navigation"
 export const metadata = {
   title: "Login",
   description:
-    "Log in to Free PDF Tools Online with Google or email to use PDF tools, API access and paid plans.",
+    "Log in to OmniToolbox with Google or email to use PDF tools, API access and paid plans.",
   alternates: {
     canonical: "/login",
   },

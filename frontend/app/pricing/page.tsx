@@ -78,7 +78,7 @@ export default function PricingPage() {
         data={{
           "@context": "https://schema.org",
           "@type": "Product",
-          name: "Free PDF Tools Online Plans",
+          name: "OmniToolbox Plans",
           description:
             "Free and paid PDF tools plans for larger files, batch processing, OCR and API access.",
           offers: plans.map((plan) => ({

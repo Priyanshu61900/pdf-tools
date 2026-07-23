@@ -7,7 +7,7 @@ import { redirect } from "next/navigation"
 export const metadata = {
   title: "Create Account",
   description:
-    "Register for Free PDF Tools Online with Google or email to use PDF tools and premium features.",
+    "Register for OmniToolbox with Google or email to use PDF tools and premium features.",
   alternates: {
     canonical: "/register",
   },

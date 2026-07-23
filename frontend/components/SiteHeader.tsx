@@ -29,7 +29,7 @@ export default async function SiteHeader() {
     <header className="sticky top-0 z-50 border-b border-zinc-800 bg-black/85 backdrop-blur">
       <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <Link href="/" className="text-xl font-bold transition hover:text-zinc-300">
-          Free PDF Tools Online
+          OmniToolbox
         </Link>
 
         <nav className="flex flex-wrap items-center gap-4 text-sm text-zinc-300">

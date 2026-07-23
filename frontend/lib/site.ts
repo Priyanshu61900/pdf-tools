@@ -1,7 +1,7 @@
-export const siteName = "Free PDF Tools Online"
+export const siteName = "OmniToolbox"
 
 export const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://freepdftoolsonline.com"
+  process.env.NEXT_PUBLIC_SITE_URL || "https://omnitoolbox.in"
 
 export const tools = [
   {

@@ -3,7 +3,7 @@ import Link from "next/link"
 export const metadata = {
   title: "About",
   description:
-    "Learn about Free PDF Tools Online and the PDF tools available on the website.",
+    "Learn about OmniToolbox and the PDF tools available on the website.",
   alternates: {
     canonical: "/about",
   },
@@ -21,11 +21,11 @@ export default function AboutPage() {
     <main className="min-h-screen bg-black text-white">
       <section className="max-w-4xl mx-auto px-6 py-16">
         <h1 className="text-4xl md:text-5xl font-bold">
-          About Free PDF Tools Online
+          About OmniToolbox
         </h1>
 
         <p className="text-zinc-400 leading-8 mt-6">
-          Free PDF Tools Online is a simple set of browser-based PDF utilities
+          OmniToolbox is a simple set of browser-based PDF utilities
           made for quick document tasks without installing desktop software.
           The site focuses on practical tools that help people find, highlight,
           extract and convert PDF content.

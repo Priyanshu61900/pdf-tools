@@ -3,7 +3,7 @@ import LegalPage from "@/components/LegalPage"
 export const metadata = {
   title: "Disclaimer",
   description:
-    "Disclaimer for Free PDF Tools Online and its PDF search, highlight, extract and conversion tools.",
+    "Disclaimer for OmniToolbox and its PDF search, highlight, extract and conversion tools.",
   alternates: {
     canonical: "/disclaimer",
   },
@@ -14,12 +14,12 @@ export default function DisclaimerPage() {
     <LegalPage
       title="Disclaimer"
       updated="May 17, 2026"
-      description="This disclaimer explains the limits of the information and tools provided by Free PDF Tools Online."
+      description="This disclaimer explains the limits of the information and tools provided by OmniToolbox."
       sections={[
         {
           title: "General Information",
           body: [
-            "Free PDF Tools Online provides document utilities for convenience. We do our best to make the tools useful, but we cannot guarantee that every result will be complete, accurate or suitable for your specific purpose.",
+            "OmniToolbox provides document utilities for convenience. We do our best to make the tools useful, but we cannot guarantee that every result will be complete, accurate or suitable for your specific purpose.",
           ],
         },
         {

@@ -66,10 +66,10 @@ async function sendConfirmationEmail(email: string, name: string, confirmationUr
     body: JSON.stringify({
       from: process.env.AUTH_EMAIL_FROM,
       to: email,
-      subject: "Confirm your Free PDF Tools account",
+      subject: "Confirm your OmniToolbox PDF Tools account",
       html: `
         <p>Hi ${name},</p>
-        <p>Confirm your Free PDF Tools Online account to finish signing in.</p>
+        <p>Confirm your OmniToolbox account to finish signing in.</p>
         <p><a href="${confirmationUrl}">Confirm my account</a></p>
       `,
     }),

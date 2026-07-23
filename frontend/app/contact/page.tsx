@@ -1,7 +1,7 @@
 export const metadata = {
   title: "Contact",
   description:
-    "Contact Free PDF Tools Online for feedback, support, privacy requests and website questions.",
+    "Contact OmniToolbox for feedback, support, privacy requests and website questions.",
   alternates: {
     canonical: "/contact",
   },
@@ -23,10 +23,10 @@ export default function ContactPage() {
         <div className="border border-zinc-800 bg-zinc-950 rounded-lg p-6 mt-8">
           <h2 className="text-2xl font-bold">Email</h2>
           <a
-            href="mailto:support@freepdftoolsonline.com"
+            href="mailto:support@omnitoolbox.in"
             className="text-zinc-300 underline mt-4 inline-block"
           >
-            support@freepdftoolsonline.com
+            support@omnitoolbox.in
           </a>
         </div>
 

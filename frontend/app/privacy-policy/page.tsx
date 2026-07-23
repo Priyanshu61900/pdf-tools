@@ -3,7 +3,7 @@ import LegalPage from "@/components/LegalPage"
 export const metadata = {
   title: "Privacy Policy",
   description:
-    "Privacy policy for Free PDF Tools Online, including PDF processing, cookies, analytics and Google AdSense information.",
+    "Privacy policy for OmniToolbox, including PDF processing, cookies, analytics and Google AdSense information.",
   alternates: {
     canonical: "/privacy-policy",
   },
@@ -14,7 +14,7 @@ export default function PrivacyPolicyPage() {
     <LegalPage
       title="Privacy Policy"
       updated="May 17, 2026"
-      description="This Privacy Policy explains how Free PDF Tools Online handles information when you use our PDF search, highlight, extract and conversion tools."
+      description="This Privacy Policy explains how OmniToolbox handles information when you use our PDF search, highlight, extract and conversion tools."
       sections={[
         {
           title: "Information We Process",

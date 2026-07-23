@@ -5,7 +5,7 @@ import { sessionCookieName, verifySessionCookie } from "@/lib/auth"
 export const metadata = {
   title: "Account",
   description:
-    "Manage your Free PDF Tools Online account, plan and API access.",
+    "Manage your OmniToolbox account, plan and API access.",
   alternates: {
     canonical: "/account",
   },

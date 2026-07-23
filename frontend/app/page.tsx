@@ -4,7 +4,7 @@ import { guides } from "@/lib/guides"
 import { absoluteUrl, tools } from "@/lib/site"
 
 export const metadata = {
-  title: "Free PDF Tools Online - Search, Highlight, Extract & Convert",
+  title: "OmniToolbox - Search, Highlight, Extract & Convert",
   description:
     "Free online PDF tools to search text in PDFs, highlight matches, extract matching pages and convert PDF files to Word documents.",
   keywords: [
@@ -19,7 +19,7 @@ export const metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Free PDF Tools Online",
+    title: "OmniToolbox",
     description:
       "Search PDF text, highlight matches, extract pages and convert PDFs to Word.",
     url: absoluteUrl("/"),
@@ -34,7 +34,7 @@ export default function Home() {
         data={{
           "@context": "https://schema.org",
           "@type": "WebSite",
-          name: "Free PDF Tools Online",
+          name: "OmniToolbox",
           url: absoluteUrl("/"),
           description:
             "Free browser-based PDF tools for searching, highlighting, extracting matching pages and converting PDF documents.",
@@ -45,7 +45,7 @@ export default function Home() {
         data={{
           "@context": "https://schema.org",
           "@type": "Organization",
-          name: "Free PDF Tools Online",
+          name: "OmniToolbox",
           url: absoluteUrl("/"),
         }}
       />
@@ -54,7 +54,7 @@ export default function Home() {
         data={{
           "@context": "https://schema.org",
           "@type": "ItemList",
-          name: "Free PDF Tools",
+          name: "OmniToolbox PDF Tools",
           itemListElement: tools.map((tool, index) => ({
             "@type": "ListItem",
             position: index + 1,
@@ -71,7 +71,7 @@ export default function Home() {
 
           <div className="animate-rise max-w-4xl">
             <h1 className="text-5xl md:text-6xl font-bold leading-tight">
-              Free PDF Tools Online
+              OmniToolbox
             </h1>
 
             <p className="text-zinc-400 mt-6 text-xl max-w-3xl leading-8">
@@ -187,7 +187,7 @@ export default function Home() {
         </h2>
 
         <p className="text-zinc-400 leading-8 mb-6">
-          Free PDF Tools Online is built for quick document tasks that
+          OmniToolbox is built for quick document tasks that
           people handle every day: finding text in long PDFs, marking
           important phrases, pulling out only relevant pages, and converting
           PDF files into editable Word documents.

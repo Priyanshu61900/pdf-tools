@@ -4,7 +4,7 @@ import Link from "next/link"
 import { absoluteUrl, tools } from "@/lib/site"
 
 export const metadata = {
-  title: "All Free PDF Tools Online",
+  title: "All OmniToolbox",
   description:
     "Browse free online PDF tools to search PDF text, highlight matches, extract matching pages and convert PDF files to Word.",
   keywords: [
@@ -27,7 +27,7 @@ export default function ToolsPage() {
         data={{
           "@context": "https://schema.org",
           "@type": "CollectionPage",
-          name: "All Free PDF Tools Online",
+          name: "All OmniToolbox",
           url: absoluteUrl("/tools"),
           description:
             "A collection of free browser-based PDF tools for searching, highlighting, extracting and converting PDF files.",
@@ -50,7 +50,7 @@ export default function ToolsPage() {
 
       <section className="max-w-5xl mx-auto px-6 py-16 text-center">
         <h1 className="text-4xl md:text-5xl font-bold">
-          All Free PDF Tools Online
+          All OmniToolbox
         </h1>
 
         <p className="text-zinc-400 leading-8 mt-6 max-w-3xl mx-auto">

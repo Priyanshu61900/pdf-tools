@@ -7,7 +7,7 @@ export default function SiteFooter() {
     <footer className="border-t border-zinc-800 bg-black">
       <div className="max-w-7xl mx-auto px-6 py-10 grid gap-8 md:grid-cols-4">
         <div>
-          <h2 className="text-lg font-bold">Free PDF Tools Online</h2>
+          <h2 className="text-lg font-bold">OmniToolbox</h2>
           <p className="text-zinc-400 text-sm leading-7 mt-3">
             Simple browser-based PDF tools for searching, highlighting,
             extracting matching pages, and converting PDF files.

@@ -3,7 +3,7 @@ import LegalPage from "@/components/LegalPage"
 export const metadata = {
   title: "Terms of Use",
   description:
-    "Terms of use for Free PDF Tools Online and its PDF processing tools.",
+    "Terms of use for OmniToolbox and its PDF processing tools.",
   alternates: {
     canonical: "/terms",
   },
@@ -14,7 +14,7 @@ export default function TermsPage() {
     <LegalPage
       title="Terms of Use"
       updated="May 17, 2026"
-      description="These Terms explain the rules for using Free PDF Tools Online. By using this website, you agree to use the tools responsibly and lawfully."
+      description="These Terms explain the rules for using OmniToolbox. By using this website, you agree to use the tools responsibly and lawfully."
       sections={[
         {
           title: "Use Of The Website",
@@ -67,7 +67,7 @@ export default function TermsPage() {
         {
           title: "Intellectual Property",
           body: [
-            "You keep your rights in the files you upload. The website name, layout, text and software are owned by Free PDF Tools Online or its respective licensors.",
+            "You keep your rights in the files you upload. The website name, layout, text and software are owned by OmniToolbox or its respective licensors.",
           ],
         },
         {

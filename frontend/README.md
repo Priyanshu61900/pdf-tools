@@ -1,75 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OmniToolbox Frontend
 
-## Getting Started
+OmniToolbox is a privacy-focused web utility suite for PDF and document tasks.
+The frontend is built with Next.js and exposes PDF tools, image utilities,
+guides, pricing, account pages and API-access documentation.
 
-First, run the development server:
+![OmniToolbox homepage](public/screenshots/omnitoolbox-home.png)
+
+## Live Product
+
+- Live URL: https://omnitoolbox.in
+- Repository: https://github.com/Priyanshu61900/pdf-tools
+
+## Features
+
+- PDF search and highlight workflows
+- Extract matching PDF pages
+- PDF to Word conversion
+- PDF compression, protection and related utility pages
+- Authentication routes for email, Google and GitHub sign-in
+- Free-plan limits with premium/API-ready request headers
+- SEO pages, guides, sitemap, robots and legal pages
+- API access page for developer usage
+
+## Tech Stack
+
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- FastAPI backend proxy routes
+- Vercel deployment
+
+## Local Setup
 
 ```bash
+npm install
+copy .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Sign-In On Vercel
-
-The existing **Continue With Google** button uses Google OAuth through the Next.js routes in `app/api/auth/google`.
-
-Add these environment variables in Vercel:
-
-```text
-NEXT_PUBLIC_SITE_URL=https://your-stable-vercel-domain.vercel.app
-GOOGLE_REDIRECT_URI=https://your-stable-vercel-domain.vercel.app/api/auth/google/callback
-AUTH_SECRET=choose-a-long-random-secret
+```env
+NEXT_PUBLIC_SITE_URL=https://omnitoolbox.in
+GOOGLE_REDIRECT_URI=https://omnitoolbox.in/api/auth/google/callback
+AUTH_SECRET=replace-with-a-long-random-secret
 GOOGLE_CLIENT_ID=your-google-oauth-client-id
 GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
+GITHUB_CLIENT_ID=your-github-oauth-client-id
+GITHUB_CLIENT_SECRET=your-github-oauth-client-secret
 BACKEND_APP_SECRET=the-same-secret-set-on-render
-RESEND_API_KEY=your-resend-api-key-for-email-confirmation
-AUTH_EMAIL_FROM=Free PDF Tools Online <accounts@your-domain.com>
+RESEND_API_KEY=your-resend-api-key
+AUTH_EMAIL_FROM=OmniToolbox <accounts@omnitoolbox.in>
 ```
 
-In your Google OAuth web client settings, add this authorized redirect URI:
+Never commit `.env`, `.env.local`, OAuth secrets, app secrets or API keys.
 
-```text
-https://your-stable-vercel-domain.vercel.app/api/auth/google/callback
+## Scripts
+
+```bash
+npm run dev      # Start local development
+npm run build    # Build production frontend
+npm run start    # Start production build
+npm run lint     # Run ESLint
 ```
 
-Use the stable project domain from **Vercel > Project > Settings > Domains**
-or a custom domain. Do not use deployment URLs with random hashes such as
-`pdf-tools-btvnpb2sc-...vercel.app`; those change every deployment and Google
-will reject them.
+## Interview Talking Points
 
-In Render, keep the FastAPI backend deployed and set:
-
-```text
-PDF_TOOLS_APP_SECRET=the-same-secret-used-for-BACKEND_APP_SECRET
-```
-
-Email/password registration uses `/api/auth/email` and sends confirmation
-links through Resend when `RESEND_API_KEY` and `AUTH_EMAIL_FROM` are set. If
-those variables are missing, the UI shows a local confirmation link so the flow
-can still be tested before email delivery is connected.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Productized a file-processing workflow instead of building a single demo page.
+- Used focused tool routes so users can complete one document task quickly.
+- Added public SEO content and legal pages for real deployment readiness.
+- Kept sensitive backend processing behind server-side proxy routes and secrets.
+- Designed the project so the same codebase can support free, premium and API users.

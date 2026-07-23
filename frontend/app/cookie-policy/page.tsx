@@ -3,7 +3,7 @@ import LegalPage from "@/components/LegalPage"
 export const metadata = {
   title: "Cookie Policy",
   description:
-    "Cookie policy for Free PDF Tools Online, including analytics and Google AdSense advertising cookies.",
+    "Cookie policy for OmniToolbox, including analytics and Google AdSense advertising cookies.",
   alternates: {
     canonical: "/cookie-policy",
   },
@@ -14,7 +14,7 @@ export default function CookiePolicyPage() {
     <LegalPage
       title="Cookie Policy"
       updated="May 17, 2026"
-      description="This Cookie Policy explains how cookies and similar technologies may be used on Free PDF Tools Online."
+      description="This Cookie Policy explains how cookies and similar technologies may be used on OmniToolbox."
       sections={[
         {
           title: "What Cookies Are",
