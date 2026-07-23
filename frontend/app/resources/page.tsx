@@ -33,10 +33,10 @@ const resources = [
     examples: ["Vercel", "Render", "Railway"],
   },
   {
-    category: "AI Tools",
+    category: "Document Analysis Tools",
     description:
-      "AI assistants and document tools that help summarize, rewrite and analyze files.",
-    examples: ["ChatGPT", "Claude", "Notion AI"],
+      "Reading, summarization and document-analysis tools for large files.",
+    examples: ["Notebook tools", "Knowledge bases", "Document analyzers"],
   },
   {
     category: "Resume Builders",
